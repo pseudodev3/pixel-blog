@@ -90,7 +90,7 @@ const PostCard = ({ post, onRead, isUnlocked }: { post: any, onRead: (post: any)
       {isUnlocked ? (
         <>READ MORE <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
       ) : (
-        <>DECRYPT TRANSMISSION <Terminal size={12} style={{ marginLeft: '8px' }} /></>
+        <>READ MORE <Terminal size={12} style={{ marginLeft: '8px' }} /></>
       )}
     </button>
   </motion.div>
