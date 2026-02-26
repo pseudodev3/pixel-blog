@@ -116,24 +116,24 @@ const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: { post: any, onClos
       exit={{ opacity: 0, scale: 1.1 }}
       style={{
         position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'var(--color-bg)', zIndex: 9000, overflowY: 'auto', padding: '2rem 1rem'
+        background: 'var(--color-bg)', zIndex: 9000, overflowY: 'auto', padding: '1rem'
       }}
     >
-      <div className="container" style={{ position: 'relative' }}>
+      <div className="container" style={{ position: 'relative', padding: '1rem' }}>
         <button className="pixel-button" onClick={onClose} style={{ marginBottom: '2rem' }}>
-          <ArrowLeft size={16} /> BACK TO MENU
+          <ArrowLeft size={16} /> BACK
         </button>
         
-        <div style={{ marginBottom: '3rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             className="neon-text-primary" 
-            style={{ fontSize: '1.8rem', marginBottom: '1rem', lineHeight: '1.2' }}
+            style={{ fontSize: '1.4rem', marginBottom: '1rem', lineHeight: '1.3' }}
           >
             {post.title}
           </motion.h1>
-          <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.7rem', color: 'var(--color-secondary)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.6rem', color: 'var(--color-secondary)' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Terminal size={14} /> {post.date}
             </span>

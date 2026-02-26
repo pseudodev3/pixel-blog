@@ -116,6 +116,21 @@ body {
   padding: 2rem;
 }
 
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .pixel-button {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.7rem;
+  }
+
+  h1 { font-size: 2rem !important; }
+  h2 { font-size: 1rem !important; }
+  h3 { font-size: 0.9rem !important; }
+}
+
 h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 2px;
