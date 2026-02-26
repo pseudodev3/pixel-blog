@@ -119,6 +119,8 @@ body {
 @media (max-width: 600px) {
   body {
     background-attachment: scroll;
+    background-size: 100% auto;
+    background-repeat: repeat;
     background-position: center top;
   }
 
