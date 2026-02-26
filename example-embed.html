@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Blog - Embed Example</title>
+  <style>
+    /* Your website styles - Pixel Blog won't be affected by these */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .my-header {
+      background: #333;
+      color: white;
+      padding: 20px;
+      margin: -20px -20px 20px -20px;
+    }
+    .my-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    /* Container for Pixel Blog */
+    #pixel-blog-container {
+      border: 2px dashed #666;
+      min-height: 600px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="my-content">
+    <header class="my-header">
+      <h1>My Personal Website</h1>
+      <p>Welcome to my site! Below is my Pixel Blog embedded as a plugin.</p>
+    </header>
+
+    <h2>My Blog</h2>
+    <!-- Pixel Blog will mount here -->
+    <div id="pixel-blog-container"></div>
+
+    <footer style="text-align: center; padding: 40px; color: #666;">
+      <p>© 2026 My Website. Built with love.</p>
+    </footer>
+  </div>
+
+  <!-- 
+    OPTION 1: Using bundled standalone version (includes React)
+    Use this if your site doesn't use React
+  -->
+  <script src="./dist/pixel-blog.standalone.js"></script>
+  <script>
+    // Initialize Pixel Blog when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      const blog = PixelBlog.mount({
+        container: '#pixel-blog-container',
+        
+        // Optional: Custom initial posts
+        posts: [
+          {
+            id: 1,
+            title: "Welcome to My Pixel Blog",
+            date: new Date().toISOString().split('T')[0],
+            category: "Intro",
+            excerpt: "This is my first post using the Pixel Blog plugin!",
+            content: "Welcome! This blog is rendered inside a Shadow DOM, so its styles are completely isolated from the rest of your website. You can customize it via the config options."
+          }
+        ],
+        
+        // Optional: Change admin password
+        adminPassword: 'mysecret123',
+        
+        // Optional: Custom storage key
+        storageKey: 'my_website_blog',
+        
+        // Optional: Enable/disable admin panel
+        enableAdmin: true,
+        
+        // Callbacks
+        onPostRead: function(post) {
+          console.log('Post read:', post.title);
+        },
+        onPostCreate: function(post) {
+          console.log('New post created:', post.title);
+        }
+      });
+
+      // You can also control the blog programmatically:
+      // blog.addPost({ title: '...', content: '...', excerpt: '...', category: '...' });
+      // blog.getPosts();
+      // blog.destroy(); // Unmount the blog
+      // blog.clearData(); // Clear localStorage
+    });
+  </script>
+
+  <!-- 
+    OPTION 2: Using external React (for sites that already use React)
+    Uncomment below and comment out OPTION 1
+  -->
+  <!--
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="./dist/pixel-blog.umd.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      PixelBlog.mount({
+        container: '#pixel-blog-container'
+      });
+    });
+  </script>
+  -->
+</body>
+</html>
