@@ -19,6 +19,8 @@ body {
   margin: 0;
   line-height: 1.6;
   overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* CRT Scanline Effect */
@@ -72,6 +74,8 @@ body {
     -4px 0 0 -4px var(--color-text),
     0 4px 0 -4px var(--color-text),
     0 -4px 0 -4px var(--color-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .pixel-button {

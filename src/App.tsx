@@ -67,7 +67,6 @@ const Navbar = ({ onOpenAdmin }: { onOpenAdmin: () => void }) => (
         }}
       >
         <Plus size={20} />
-        <span style={{ fontSize: '0.6rem', letterSpacing: '2px' }}>SYS_ADMIN</span>
       </motion.button>
     </div>
   </nav>
@@ -383,14 +382,6 @@ export default function App() {
 
       <main className="container">
         <header style={{ textAlign: 'center', padding: '4rem 0' }}>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          >
-            <div style={{ width: '8px', height: '8px', background: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00' }} />
-            <span style={{ fontSize: '0.6rem', color: '#00ff00', letterSpacing: '2px' }}>SYSTEM_STATUS: ONLINE</span>
-          </motion.div>
           <motion.h1 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -399,9 +390,6 @@ export default function App() {
           >
             PIXEL_BLOG
           </motion.h1>
-          <p style={{ fontSize: '0.7rem', color: 'var(--color-secondary)', letterSpacing: '4px' }}>
-            V_2.0 // NEURAL_INTERFACE
-          </p>
           
           <div style={{ height: '2rem', marginTop: '2rem' }}>
             <AnimatePresence>
