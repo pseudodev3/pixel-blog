@@ -39,28 +39,36 @@ const CRTOverlay = () => (
   </>
 )
 
-const Navbar = ({ onOpenAdmin, isUnlocked }: { onOpenAdmin: () => void, isUnlocked: boolean }) => (
+const Navbar = ({ onOpenAdmin }: { onOpenAdmin: () => void }) => (
   <nav className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2rem 1rem' }}>
     <motion.div 
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       className="neon-text-primary"
-      style={{ fontSize: '1.2rem', fontWeight: 'bold' }}
+      style={{ fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer' }}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
     >
       PIXEL_LOG
     </motion.div>
     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-      {isUnlocked && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          onClick={onOpenAdmin}
-          className="pixel-button"
-          style={{ padding: '0.5rem', background: 'var(--color-accent)', color: '#000' }}
-        >
-          <Plus size={16} />
-        </motion.button>
-      )}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        whileHover={{ scale: 1.1, color: 'var(--color-primary)' }}
+        onClick={onOpenAdmin}
+        style={{ 
+          background: 'none', 
+          border: 'none', 
+          color: 'var(--color-text)', 
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}
+      >
+        <Plus size={20} />
+        <span style={{ fontSize: '0.6rem', letterSpacing: '2px' }}>SYS_ADMIN</span>
+      </motion.button>
     </div>
   </nav>
 )
@@ -83,26 +91,24 @@ const PostCard = ({ post, onRead, isUnlocked }: { post: any, onRead: (post: any)
       {isUnlocked ? (
         <>ACCESS GRANTED <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
       ) : (
-        <>READ MORE <span style={{ fontSize: '0.5rem', marginLeft: '8px', color: 'var(--color-accent)' }}>(COST: 1 CR)</span></>
+        <>DECRYPT TRANSMISSION <Terminal size={12} style={{ marginLeft: '8px' }} /></>
       )}
     </button>
   </motion.div>
 )
 
-const PostViewer = ({ post, onClose, isUnlocked, onUnlock, coins }: { post: any, onClose: () => void, isUnlocked: boolean, onUnlock: () => void, coins: number }) => {
-  const [isDecrypting, setIsDecrypting] = useState(false)
+const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: { post: any, onClose: () => void, isUnlocked: boolean, onUnlock: () => void }) => {
+  const [isDecrypting, setIsDecrypting] = useState(!isUnlocked)
   
-  const handleDecrypt = () => {
-    if (coins >= 1) {
-      setIsDecrypting(true)
-      setTimeout(() => {
+  useEffect(() => {
+    if (!isUnlocked) {
+      const timer = setTimeout(() => {
         onUnlock()
         setIsDecrypting(false)
-      }, 2000)
-    } else {
-      onUnlock() // This will trigger the insufficient credits msg
+      }, 1500)
+      return () => clearTimeout(timer)
     }
-  }
+  }, [isUnlocked, onUnlock])
 
   return (
     <motion.div 
@@ -186,46 +192,6 @@ const PostViewer = ({ post, onClose, isUnlocked, onUnlock, coins }: { post: any,
             )}
           </div>
 
-          {(!isUnlocked && !isDecrypting) && (
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(0,0,0,0.6)',
-              zIndex: 10,
-              backdropFilter: 'blur(4px)'
-            }}>
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="pixel-border"
-                style={{ textAlign: 'center', padding: '3rem', background: '#000', maxWidth: '90%' }}
-              >
-                <Lock size={64} style={{ color: 'var(--color-accent)', marginBottom: '1.5rem' }} />
-                <h2 className="neon-text-primary" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>ACCESS DENIED</h2>
-                <p style={{ fontSize: '0.7rem', marginBottom: '2.5rem', color: '#aaa', maxWidth: '300px', margin: '0 auto 2.5rem' }}>
-                  THIS DATA IS PROTECTED BY 256-BIT PIXEL ENCRYPTION.
-                </p>
-                <button 
-                  className="pixel-button" 
-                  onClick={handleDecrypt}
-                  style={{ background: 'var(--color-accent)', color: '#000', padding: '1.5rem 2rem' }}
-                >
-                  INSERT COIN TO DECRYPT
-                </button>
-                {coins === 0 && (
-                  <p style={{ fontSize: '0.6rem', color: '#ff0044', marginTop: '1.5rem' }}>!!! INSUFFICIENT CREDITS !!!</p>
-                )}
-              </motion.div>
-            </div>
-          )}
-
           {isDecrypting && (
             <div style={{
               position: 'absolute',
@@ -244,11 +210,11 @@ const PostViewer = ({ post, onClose, isUnlocked, onUnlock, coins }: { post: any,
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: '100%' }}
-                  transition={{ duration: 2, ease: "linear" }}
+                  transition={{ duration: 1.5, ease: "linear" }}
                   style={{ height: '100%', background: 'var(--color-accent)' }}
                 />
               </div>
-              <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--color-accent)' }}>DECRYPTING...</p>
+              <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--color-accent)', letterSpacing: '4px' }}>DECRYPTING_DATA...</p>
             </div>
           )}
         </div>
@@ -360,12 +326,11 @@ const AdminTerminal = ({ onClose, onSave }: { onClose: () => void, onSave: (post
 }
 
 export default function App() {
-  const [coins, setCoins] = useState(0)
   const [posts, setPosts] = useState<any[]>([])
   const [unlockedPosts, setUnlockedPosts] = useState<number[]>([])
   const [isAdminOpen, setIsAdminOpen] = useState(false)
   const [activePost, setActivePost] = useState<any>(null)
-  const [msg, setMsg] = useState<{ text: string, type: 'secret' | 'error' } | null>(null)
+  const [statusMsg, setStatusMsg] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('pixel_posts')
@@ -376,9 +341,9 @@ export default function App() {
     if (savedUnlocked) setUnlockedPosts(JSON.parse(savedUnlocked))
   }, [])
 
-  const triggerMsg = (text: string, type: 'secret' | 'error') => {
-    setMsg({ text, type })
-    setTimeout(() => setMsg(null), 2500)
+  const triggerStatus = (text: string) => {
+    setStatusMsg(text)
+    setTimeout(() => setStatusMsg(null), 3000)
   }
 
   const handleRead = (post: any) => {
@@ -386,14 +351,10 @@ export default function App() {
   }
 
   const handleUnlock = (postId: number) => {
-    if (coins >= 1) {
-      setCoins(c => c - 1)
+    if (!unlockedPosts.includes(postId)) {
       const newUnlocked = [...unlockedPosts, postId]
       setUnlockedPosts(newUnlocked)
       localStorage.setItem('pixel_unlocked', JSON.stringify(newUnlocked))
-      triggerMsg("DECRYPTION SUCCESSFUL", "secret")
-    } else {
-      triggerMsg("!!! INSUFFICIENT CREDITS !!!", "error")
     }
   }
 
@@ -406,6 +367,7 @@ export default function App() {
           const updated = [p, ...posts];
           setPosts(updated);
           localStorage.setItem('pixel_posts', JSON.stringify(updated));
+          triggerStatus("NEW_TRANSMISSION_UPLOADING...")
         }} />}
         {activePost && (
           <PostViewer 
@@ -413,67 +375,51 @@ export default function App() {
             onClose={() => setActivePost(null)} 
             isUnlocked={unlockedPosts.includes(activePost.id)}
             onUnlock={() => handleUnlock(activePost.id)}
-            coins={coins}
           />
         )}
       </AnimatePresence>
 
-      <Navbar onOpenAdmin={() => setIsAdminOpen(true)} isUnlocked={coins >= 3} />
+      <Navbar onOpenAdmin={() => setIsAdminOpen(true)} />
 
       <main className="container">
         <header style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <div style={{ width: '8px', height: '8px', background: '#00ff00', borderRadius: '50%', boxShadow: '0 0 10px #00ff00' }} />
+            <span style={{ fontSize: '0.6rem', color: '#00ff00', letterSpacing: '2px' }}>SYSTEM_STATUS: ONLINE</span>
+          </motion.div>
           <motion.h1 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="neon-text-primary"
-            style={{ fontSize: '2.5rem', marginBottom: '1rem' }}
+            style={{ fontSize: '3rem', marginBottom: '1rem' }}
           >
-            PIXEL BLOG
+            PIXEL_BLOG
           </motion.h1>
+          <p style={{ fontSize: '0.7rem', color: 'var(--color-secondary)', letterSpacing: '4px' }}>
+            V_2.0 // NEURAL_INTERFACE
+          </p>
           
-          <div style={{ height: '2rem', marginBottom: '1rem' }}>
-            <AnimatePresence mode="wait">
-              {msg ? (
+          <div style={{ height: '2rem', marginTop: '2rem' }}>
+            <AnimatePresence>
+              {statusMsg && (
                 <motion.p
-                  key="msg"
-                  initial={{ y: 20, opacity: 0 }}
+                  initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -20, opacity: 0 }}
-                  style={{ fontSize: '0.8rem', color: msg.type === 'error' ? '#ff0044' : 'var(--color-accent)' }}
+                  exit={{ y: -10, opacity: 0 }}
+                  style={{ fontSize: '0.8rem', color: 'var(--color-accent)' }}
                 >
-                  {msg.text}
-                </motion.p>
-              ) : (
-                <motion.p
-                  key="score"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{ fontSize: '0.8rem', color: 'var(--color-secondary)' }}
-                >
-                  HIGH SCORE: {coins * 1000} | CREDITS: {coins}
+                  {statusMsg}
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
-          
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <button 
-              className="pixel-button" 
-              onClick={() => {
-                setCoins(c => c + 1)
-                if (coins === 2) triggerMsg("!!! ADMIN LINK ESTABLISHED !!!", "secret")
-              }}
-              style={{ padding: '1.5rem 3rem', fontSize: '1rem' }}
-            >
-              INSERT COIN {coins < 3 && <Lock size={16} style={{ marginLeft: '10px' }} />}
-            </button>
-          </motion.div>
         </header>
 
-        <section style={{ marginTop: '4rem' }}>
+        <section style={{ marginTop: '2rem' }}>
           <h2 style={{ fontSize: '1.2rem', marginBottom: '2rem', borderBottom: '4px solid var(--color-primary)', display: 'inline-block' }}>
             Latest Transmission
           </h2>
