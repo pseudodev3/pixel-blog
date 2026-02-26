@@ -88,7 +88,7 @@ const PostCard = ({ post, onRead, isUnlocked }: { post: any, onRead: (post: any)
     <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '1.5rem' }}>{post.excerpt}</p>
     <button className="pixel-button" onClick={() => onRead(post)}>
       {isUnlocked ? (
-        <>ACCESS GRANTED <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
+        <>READ MORE <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
       ) : (
         <>DECRYPT TRANSMISSION <Terminal size={12} style={{ marginLeft: '8px' }} /></>
       )}
