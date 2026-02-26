@@ -20,6 +20,15 @@ const INITIAL_POSTS = [
     excerpt: "Squeezing every cycle out of the CPU. A deep dive into assembly-style thinking.",
     content: "The programmers of the 80s were wizards. They didn't have gigabytes of RAM; they had kilobytes. Every byte was a battle. Modern web development has grown bloated, but we can still apply those lessons. Lazy loading, tree shaking, and efficient state management are the modern versions of bank-switching and sprite multiplexing. Treat your user's CPU with respect.",
     icon: <Zap size={24} />
+  },
+  {
+    id: 3,
+    title: "The Ghost in the Machine",
+    date: "2026-02-24",
+    category: "AI",
+    excerpt: "When the algorithm starts dreaming in 8-bit. The intersection of neural networks and retro aesthetics.",
+    content: "Artificial Intelligence is often portrayed as a sleek, sterile future. But what if we gave it the constraints of the past? Generative art that follows the rules of the NES or C64 palette has a soul that pure high-def generation lacks. It's about the patterns, the dithering, and the happy accidents that occur when logic meets limitation. The ghost in the machine prefers scanlines.",
+    icon: <Terminal size={24} />
   }
 ]
 
@@ -56,7 +65,7 @@ const Navbar = ({ onOpenAdmin, isUnlocked }: { onOpenAdmin: () => void, isUnlock
   </nav>
 )
 
-const PostCard = ({ post, onRead }: { post: any, onRead: (post: any) => void }) => (
+const PostCard = ({ post, onRead, isUnlocked }: { post: any, onRead: (post: any) => void, isUnlocked: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -71,39 +80,200 @@ const PostCard = ({ post, onRead }: { post: any, onRead: (post: any) => void }) 
     <h3 className="neon-text-primary" style={{ fontSize: '1rem', marginBottom: '1rem' }}>{post.title}</h3>
     <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '1.5rem' }}>{post.excerpt}</p>
     <button className="pixel-button" onClick={() => onRead(post)}>
-      READ MORE <span style={{ fontSize: '0.5rem', marginLeft: '8px', color: 'var(--color-accent)' }}>(COST: 1 CR)</span>
+      {isUnlocked ? (
+        <>ACCESS GRANTED <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
+      ) : (
+        <>READ MORE <span style={{ fontSize: '0.5rem', marginLeft: '8px', color: 'var(--color-accent)' }}>(COST: 1 CR)</span></>
+      )}
     </button>
   </motion.div>
 )
 
-const PostViewer = ({ post, onClose }: { post: any, onClose: () => void }) => (
-  <motion.div 
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 1.1 }}
-    style={{
-      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      background: 'var(--color-bg)', zIndex: 9000, overflowY: 'auto', padding: '2rem 1rem'
-    }}
-  >
-    <div className="container">
-      <button className="pixel-button" onClick={onClose} style={{ marginBottom: '2rem' }}>
-        <ArrowLeft size={16} /> BACK TO MENU
-      </button>
-      <h1 className="neon-text-primary" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{post.title}</h1>
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', fontSize: '0.6rem', color: 'var(--color-secondary)' }}>
-        <span>DATE: {post.date}</span>
-        <span>CAT: {post.category}</span>
+const PostViewer = ({ post, onClose, isUnlocked, onUnlock, coins }: { post: any, onClose: () => void, isUnlocked: boolean, onUnlock: () => void, coins: number }) => {
+  const [isDecrypting, setIsDecrypting] = useState(false)
+  
+  const handleDecrypt = () => {
+    if (coins >= 1) {
+      setIsDecrypting(true)
+      setTimeout(() => {
+        onUnlock()
+        setIsDecrypting(false)
+      }, 2000)
+    } else {
+      onUnlock() // This will trigger the insufficient credits msg
+    }
+  }
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.1 }}
+      style={{
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        background: 'var(--color-bg)', zIndex: 9000, overflowY: 'auto', padding: '2rem 1rem'
+      }}
+    >
+      <div className="container" style={{ position: 'relative' }}>
+        <button className="pixel-button" onClick={onClose} style={{ marginBottom: '2rem' }}>
+          <ArrowLeft size={16} /> BACK TO MENU
+        </button>
+        
+        <div style={{ marginBottom: '3rem' }}>
+          <motion.h1 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="neon-text-primary" 
+            style={{ fontSize: '1.8rem', marginBottom: '1rem', lineHeight: '1.2' }}
+          >
+            {post.title}
+          </motion.h1>
+          <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.7rem', color: 'var(--color-secondary)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Terminal size={14} /> {post.date}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Gamepad2 size={14} /> {post.category}
+            </span>
+          </div>
+        </div>
+        
+        <div style={{ position: 'relative' }}>
+          <div 
+            className="pixel-border" 
+            style={{ 
+              padding: '2.5rem', 
+              lineHeight: '1.8', 
+              fontSize: '0.9rem',
+              filter: (isUnlocked || isDecrypting) ? 'none' : 'blur(12px)',
+              transition: 'filter 0.8s ease',
+              userSelect: isUnlocked ? 'auto' : 'none',
+              pointerEvents: isUnlocked ? 'auto' : 'none',
+              minHeight: '400px',
+              background: 'rgba(255,255,255,0.02)'
+            }}
+          >
+            {isUnlocked ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1 }}
+              >
+                {post.content}
+              </motion.div>
+            ) : isDecrypting ? (
+              <div style={{ color: 'var(--color-accent)', fontFamily: 'monospace' }}>
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.1, delay: i * 0.05 }}
+                  >
+                    {Math.random().toString(16).substring(2, 40)}
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ opacity: 0.5 }}>
+                {post.content}
+                <div style={{ marginTop: '2rem' }}>
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} style={{ height: '1.2rem', background: '#222', marginBottom: '0.8rem', width: `${Math.random() * 40 + 60}%` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(!isUnlocked && !isDecrypting) && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)',
+              zIndex: 10,
+              backdropFilter: 'blur(4px)'
+            }}>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="pixel-border"
+                style={{ textAlign: 'center', padding: '3rem', background: '#000', maxWidth: '90%' }}
+              >
+                <Lock size={64} style={{ color: 'var(--color-accent)', marginBottom: '1.5rem' }} />
+                <h2 className="neon-text-primary" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>ACCESS DENIED</h2>
+                <p style={{ fontSize: '0.7rem', marginBottom: '2.5rem', color: '#aaa', maxWidth: '300px', margin: '0 auto 2.5rem' }}>
+                  THIS DATA IS PROTECTED BY 256-BIT PIXEL ENCRYPTION.
+                </p>
+                <button 
+                  className="pixel-button" 
+                  onClick={handleDecrypt}
+                  style={{ background: 'var(--color-accent)', color: '#000', padding: '1.5rem 2rem' }}
+                >
+                  INSERT COIN TO DECRYPT
+                </button>
+                {coins === 0 && (
+                  <p style={{ fontSize: '0.6rem', color: '#ff0044', marginTop: '1.5rem' }}>!!! INSUFFICIENT CREDITS !!!</p>
+                )}
+              </motion.div>
+            </div>
+          )}
+
+          {isDecrypting && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 20,
+              background: 'rgba(0,0,0,0.8)'
+            }}>
+              <div style={{ width: '300px', height: '30px', border: '4px solid var(--color-accent)', position: 'relative' }}>
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 2, ease: "linear" }}
+                  style={{ height: '100%', background: 'var(--color-accent)' }}
+                />
+              </div>
+              <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--color-accent)' }}>DECRYPTING...</p>
+            </div>
+          )}
+        </div>
+
+        {isUnlocked && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ marginTop: '4rem', textAlign: 'center', borderTop: '4px solid #222', padding: '2rem' }}
+          >
+            <AlertTriangle size={24} style={{ color: 'var(--color-accent)', marginBottom: '1rem' }} />
+            <p style={{ fontSize: '0.6rem', color: 'var(--color-accent)', letterSpacing: '4px' }}>END OF ENCRYPTED TRANSMISSION</p>
+            <button 
+              className="pixel-button" 
+              onClick={onClose} 
+              style={{ marginTop: '2rem', fontSize: '0.6rem' }}
+            >
+              RETURN TO TERMINAL
+            </button>
+          </motion.div>
+        )}
       </div>
-      <div className="pixel-border" style={{ padding: '2rem', lineHeight: '2', fontSize: '0.8rem' }}>
-        {post.content}
-      </div>
-      <div style={{ marginTop: '3rem', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.6rem', color: 'var(--color-accent)' }}>--- END OF TRANSMISSION ---</p>
-      </div>
-    </div>
-  </motion.div>
-)
+    </motion.div>
+  )
+}
 
 const AdminTerminal = ({ onClose, onSave }: { onClose: () => void, onSave: (post: any) => void }) => {
   const [step, setStep] = useState<'auth' | 'write'>('auth')
@@ -192,6 +362,7 @@ const AdminTerminal = ({ onClose, onSave }: { onClose: () => void, onSave: (post
 export default function App() {
   const [coins, setCoins] = useState(0)
   const [posts, setPosts] = useState<any[]>([])
+  const [unlockedPosts, setUnlockedPosts] = useState<number[]>([])
   const [isAdminOpen, setIsAdminOpen] = useState(false)
   const [activePost, setActivePost] = useState<any>(null)
   const [msg, setMsg] = useState<{ text: string, type: 'secret' | 'error' } | null>(null)
@@ -200,6 +371,9 @@ export default function App() {
     const saved = localStorage.getItem('pixel_posts')
     if (saved) setPosts(JSON.parse(saved))
     else setPosts(INITIAL_POSTS)
+
+    const savedUnlocked = localStorage.getItem('pixel_unlocked')
+    if (savedUnlocked) setUnlockedPosts(JSON.parse(savedUnlocked))
   }, [])
 
   const triggerMsg = (text: string, type: 'secret' | 'error') => {
@@ -208,11 +382,18 @@ export default function App() {
   }
 
   const handleRead = (post: any) => {
+    setActivePost(post)
+  }
+
+  const handleUnlock = (postId: number) => {
     if (coins >= 1) {
       setCoins(c => c - 1)
-      setActivePost(post)
+      const newUnlocked = [...unlockedPosts, postId]
+      setUnlockedPosts(newUnlocked)
+      localStorage.setItem('pixel_unlocked', JSON.stringify(newUnlocked))
+      triggerMsg("DECRYPTION SUCCESSFUL", "secret")
     } else {
-      triggerMsg("!!! INSUFFICIENT CREDITS: INSERT COIN !!!", "error")
+      triggerMsg("!!! INSUFFICIENT CREDITS !!!", "error")
     }
   }
 
@@ -226,7 +407,15 @@ export default function App() {
           setPosts(updated);
           localStorage.setItem('pixel_posts', JSON.stringify(updated));
         }} />}
-        {activePost && <PostViewer post={activePost} onClose={() => setActivePost(null)} />}
+        {activePost && (
+          <PostViewer 
+            post={activePost} 
+            onClose={() => setActivePost(null)} 
+            isUnlocked={unlockedPosts.includes(activePost.id)}
+            onUnlock={() => handleUnlock(activePost.id)}
+            coins={coins}
+          />
+        )}
       </AnimatePresence>
 
       <Navbar onOpenAdmin={() => setIsAdminOpen(true)} isUnlocked={coins >= 3} />
@@ -289,7 +478,12 @@ export default function App() {
             Latest Transmission
           </h2>
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onRead={handleRead} />
+            <PostCard 
+              key={post.id} 
+              post={post} 
+              onRead={handleRead} 
+              isUnlocked={unlockedPosts.includes(post.id)} 
+            />
           ))}
         </section>
       </main>
