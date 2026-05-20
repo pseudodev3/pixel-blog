@@ -279,7 +279,7 @@ export default function App({
       </main>
 
       <footer className="container" style={{ textAlign: 'center', padding: '4rem 0', fontSize: '0.6rem', color: '#666' }}>
-        <p>© 2026 PIXEL_LOG ENGINE. ALL RIGHTS RESERVED.</p>
+        <p>© 2026 PIXEL BLOG ENGINE. ALL RIGHTS RESERVED.</p>
         <p style={{ marginTop: '1rem' }}>MADE WITH 8-BIT PASSION</p>
       </footer>
     </div>
