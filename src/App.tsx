@@ -327,17 +327,16 @@ export default function App({
         </div>
 
         <section style={{ marginTop: '1rem' }}>
-          <div className="pixel-border" style={{ 
+          <div style={{ 
             display: 'flex', 
             justifyContent: 'flex-end', 
             alignItems: 'center', 
-            marginBottom: '4rem', 
-            padding: '1rem 1.5rem',
-            background: 'rgba(255,255,255,0.02)',
-            borderColor: '#222',
+            marginBottom: '3rem', 
+            padding: '1rem 0',
             fontSize: '0.6rem',
             letterSpacing: '2px',
-            color: '#666'
+            color: '#666',
+            borderBottom: '2px solid #111'
           }}>
             <span style={{ color: 'var(--color-secondary)' }}>TOTAL_OBJECTS: {filteredPosts.length}</span>
           </div>
