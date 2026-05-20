@@ -91,30 +91,72 @@ export default function App({
     audio.setEnabled(isAudioEnabled)
   }, [isAudioEnabled])
 
-  // Load posts from localStorage or use initial/default
+  // Load posts from Cloud (Vercel KV) or fall back to localStorage/initial
   useEffect(() => {
-    const saved = localStorage.getItem(`${storageKey}_posts`)
-    if (saved) {
+    const loadData = async () => {
+      let cloudPosts: Post[] | null = null;
+      
+      // 1. Try to fetch from Cloud
       try {
-        setPosts(JSON.parse(saved))
+        const res = await fetch(`/api/posts?storageKey=${storageKey}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            cloudPosts = data;
+          }
+        }
       } catch (e) {
-        console.error('[PixelBlog] Failed to parse saved posts:', e)
-        setPosts(initialPosts || DEFAULT_POSTS)
+        console.warn('[PixelBlog] Cloud fetch failed, falling back to local:', e);
       }
-    } else {
-      setPosts(initialPosts || DEFAULT_POSTS)
+
+      // 2. Resolve final posts
+      if (cloudPosts) {
+        setPosts(cloudPosts);
+        localStorage.setItem(`${storageKey}_posts`, JSON.stringify(cloudPosts));
+      } else {
+        const saved = localStorage.getItem(`${storageKey}_posts`)
+        if (saved) {
+          try {
+            setPosts(JSON.parse(saved))
+          } catch (e) {
+            setPosts(initialPosts || DEFAULT_POSTS)
+          }
+        } else {
+          setPosts(initialPosts || DEFAULT_POSTS)
+        }
+      }
+
+      // 3. Load unlocked state (always local for user privacy)
+      const savedUnlocked = localStorage.getItem(`${storageKey}_unlocked`)
+      if (savedUnlocked) {
+        try {
+          setUnlockedPosts(JSON.parse(savedUnlocked))
+        } catch (e) {
+          console.error('[PixelBlog] Failed to parse unlocked posts:', e)
+        }
+      }
+      setIsLoaded(true)
     }
 
-    const savedUnlocked = localStorage.getItem(`${storageKey}_unlocked`)
-    if (savedUnlocked) {
-      try {
-        setUnlockedPosts(JSON.parse(savedUnlocked))
-      } catch (e) {
-        console.error('[PixelBlog] Failed to parse unlocked posts:', e)
-      }
-    }
-    setIsLoaded(true)
+    loadData();
   }, [initialPosts, storageKey])
+
+  // Helper to sync to cloud
+  const syncToCloud = async (updatedPosts: Post[]) => {
+    try {
+      await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          posts: updatedPosts,
+          password: adminPassword,
+          storageKey
+        })
+      });
+    } catch (e) {
+      console.error('[PixelBlog] Failed to sync to cloud:', e);
+    }
+  }
 
   // Listen for programmatic post additions
   useEffect(() => {
@@ -173,16 +215,18 @@ export default function App({
         updated = [post, ...current]
       }
       localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
+      syncToCloud(updated);
       return updated
     })
     if (onPostCreate) onPostCreate(post)
-    triggerStatus(post.id ? "TRANSMISSION_UPDATED..." : "NEW_TRANSMISSION_UPLOADING...", 'success')
+    triggerStatus(post.id && posts.find(p => p.id === post.id) ? "TRANSMISSION_UPDATED..." : "NEW_TRANSMISSION_UPLOADING...", 'success')
   }
 
   const handleDeletePost = (postId: number) => {
     setPosts(current => {
       const updated = current.filter(p => p.id !== postId)
       localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
+      syncToCloud(updated);
       return updated
     })
     triggerStatus("TRANSMISSION_DELETED", 'error')
@@ -191,6 +235,7 @@ export default function App({
   const handleImportPosts = (newPosts: Post[]) => {
     setPosts(newPosts)
     localStorage.setItem(`${storageKey}_posts`, JSON.stringify(newPosts))
+    syncToCloud(newPosts);
     triggerStatus("DATABASE_RESTORED_SUCCESSFULLY", 'success')
   }
 
