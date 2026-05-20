@@ -2,12 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
-// Check if we're building for library or standalone
-const isLib = process.env.BUILD_MODE === 'lib'
+// Modes: 'app' (default), 'lib', 'standalone'
+const buildMode = process.env.BUILD_MODE || 'app'
 
 export default defineConfig({
   plugins: [react()],
-  build: isLib ? {
+  build: buildMode === 'app' ? {
+    // Standard App build for Vercel/Demo
+    outDir: 'dist',
+    emptyOutDir: true,
+  } : buildMode === 'lib' ? {
     // Library mode for embedding in other sites
     lib: {
       entry: resolve(__dirname, 'src/main.tsx'),
@@ -32,7 +36,6 @@ export default defineConfig({
         }
       }
     },
-    // Don't empty outDir to keep dist files
     emptyOutDir: false
   } : {
     // Standalone mode - bundle everything for direct use
@@ -48,7 +51,8 @@ export default defineConfig({
       output: {
         inlineDynamicImports: true
       }
-    }
+    },
+    emptyOutDir: false
   },
   define: {
     'process.env': {}

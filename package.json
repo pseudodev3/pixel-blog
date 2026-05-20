@@ -12,9 +12,9 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:lib && npm run build:standalone",
+    "build": "vite build && npm run build:lib && npm run build:standalone",
     "build:lib": "BUILD_MODE=lib vite build",
-    "build:standalone": "vite build",
+    "build:standalone": "BUILD_MODE=standalone vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
