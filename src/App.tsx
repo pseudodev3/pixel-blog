@@ -329,7 +329,7 @@ export default function App({
         <section style={{ marginTop: '1rem' }}>
           <div className="pixel-border" style={{ 
             display: 'flex', 
-            justifyContent: 'space-between', 
+            justifyContent: 'flex-end', 
             alignItems: 'center', 
             marginBottom: '4rem', 
             padding: '1rem 1.5rem',
@@ -339,10 +339,7 @@ export default function App({
             letterSpacing: '2px',
             color: '#666'
           }}>
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-              <span className="hidden-mobile">STATUS://SECURE</span>
-              <span style={{ color: 'var(--color-secondary)' }}>TOTAL_OBJECTS: {filteredPosts.length}</span>
-            </div>
+            <span style={{ color: 'var(--color-secondary)' }}>TOTAL_OBJECTS: {filteredPosts.length}</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
