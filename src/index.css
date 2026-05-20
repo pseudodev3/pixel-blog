@@ -116,6 +116,56 @@
     calc(var(--pixel-unit) * -1) calc(var(--pixel-unit) * -1) 0 rgba(255,255,255,0.1);
 }
 
+.pixel-blog-wrapper .title-bracket {
+  color: var(--color-secondary);
+  opacity: 0.5;
+  margin: 0 0.5rem;
+  font-weight: normal;
+}
+
+.pixel-blog-wrapper .stamped-title {
+  position: relative;
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: linear-gradient(90deg, var(--color-primary) 0%, transparent 100%);
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s steps(4);
+  color: var(--color-text);
+}
+
+.pixel-border:hover .stamped-title {
+  background-size: 100% 100%;
+  color: #000;
+  text-shadow: none;
+}
+
+.pixel-blog-wrapper .pixel-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.pixel-blog-wrapper .pixel-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer-anim 3s infinite steps(10);
+}
+
+@keyframes shimmer-anim {
+  0% { left: -100%; }
+  30%, 100% { left: 200%; }
+}
+
 .pixel-blog-wrapper .hotel-logo {
   color: var(--color-primary);
   text-transform: uppercase;

@@ -41,17 +41,24 @@ export const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: PostViewerPr
           <ArrowLeft size={16} /> [RETURN_TO_BASE]
         </button>
         
-        <div style={{ marginBottom: '4rem' }}>
+        <div style={{ marginBottom: '4rem', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ width: '40px', height: '2px', background: 'var(--color-primary)' }} />
+            <span style={{ fontSize: '0.5rem', letterSpacing: '4px', opacity: 0.5 }}>IDENT://SECURE_NODE</span>
+            <div style={{ flex: 1, height: '2px', background: '#111' }} />
+          </div>
+          
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="neon-text-primary glitch-text" 
+            className="neon-text-primary glitch-text pixel-shimmer" 
             data-text={post.title}
-            style={{ fontSize: '2rem', marginBottom: '1.5rem', lineHeight: '1.2' }}
+            style={{ fontSize: '2.5rem', marginBottom: '1.5rem', lineHeight: '1.1', display: 'inline-block', paddingRight: '2rem' }}
           >
             {post.title}
           </motion.h1>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', fontSize: '0.6rem', color: 'var(--color-secondary)', opacity: 0.7 }}>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', fontSize: '0.6rem', color: 'var(--color-secondary)', opacity: 0.7, borderTop: '2px solid #111', paddingTop: '1.5rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <Terminal size={14} /> DATE://{post.date.replace(/-/g, '.')}
             </span>

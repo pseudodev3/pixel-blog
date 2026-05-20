@@ -40,8 +40,10 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
         </span>
       </div>
       
-      <h3 className="neon-text-primary" style={{ fontSize: '1.1rem', marginBottom: '1.2rem', lineHeight: '1.4' }}>
-        {post.title}
+      <h3 style={{ fontSize: '1rem', marginBottom: '1.5rem', lineHeight: '1.5', display: 'flex', alignItems: 'flex-start' }}>
+        <span className="title-bracket" style={{ marginTop: '0.2rem' }}>[</span>
+        <span className="stamped-title neon-text-primary">{post.title}</span>
+        <span className="title-bracket" style={{ marginTop: '0.2rem' }}>]</span>
       </h3>
       
       <p style={{ fontSize: '0.7rem', color: '#ccc', marginBottom: '2rem', lineHeight: '1.6', opacity: 0.9 }}>
