@@ -327,14 +327,37 @@ export default function App({
         </div>
 
         <section style={{ marginTop: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', borderBottom: '4px solid var(--color-primary)', paddingBottom: '0.5rem' }}>
-            <h2 style={{ fontSize: '1.2rem' }}>
-              {activeCategory ? `Node: ${activeCategory}` : 'Latest Transmissions'}
-            </h2>
-            <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>COUNT: {filteredPosts.length}</span>
+          <div className="pixel-border" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '4rem', 
+            padding: '1rem 1.5rem',
+            background: 'rgba(255,255,255,0.02)',
+            borderColor: '#222',
+            fontSize: '0.6rem',
+            letterSpacing: '2px',
+            color: '#666'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <motion.div 
+                  animate={{ opacity: [1, 0.4, 1] }} 
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  style={{ width: '8px', height: '8px', background: 'var(--color-primary)', borderRadius: '50%', boxShadow: '0 0 5px var(--color-primary)' }} 
+                />
+                <span style={{ color: 'var(--color-primary)' }}>ACTIVE_NODE</span>
+              </div>
+              <span>DIR://ROOT/{activeCategory ? activeCategory.toUpperCase() : 'ALL_TRANS'}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+              <span className="hidden-mobile">STATUS://SECURE</span>
+              <span style={{ color: 'var(--color-secondary)' }}>TOTAL_OBJECTS: {filteredPosts.length}</span>
+            </div>
           </div>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
+
             {postsWithIcons.map((post) => (
               <PostCard 
                 key={post.id} 

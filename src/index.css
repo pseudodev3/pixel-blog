@@ -241,6 +241,10 @@
 }
 
 @media (max-width: 600px) {
+  .pixel-blog-wrapper .hidden-mobile {
+    display: none !important;
+  }
+  
   .pixel-blog-wrapper .container {
     padding: 1.5rem;
   }
