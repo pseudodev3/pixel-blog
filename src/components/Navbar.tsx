@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { Plus, Github } from 'lucide-react'
 
 interface NavbarProps {
   onOpenAdmin: () => void
@@ -41,6 +41,17 @@ export const Navbar = ({ onOpenAdmin, showAdmin }: NavbarProps) => {
         ))}
       </motion.div>
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+        <motion.a
+          href="https://github.com/pseudodev3"
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1, color: 'var(--color-primary)' }}
+          style={{ color: 'var(--color-text)', display: 'flex', alignItems: 'center' }}
+        >
+          <Github size={20} />
+        </motion.a>
         {showAdmin && (
           <motion.button
             initial={{ opacity: 0 }}
