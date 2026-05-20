@@ -339,16 +339,13 @@ export default function App({
             letterSpacing: '2px',
             color: '#666'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <motion.div 
-                  animate={{ opacity: [1, 0.4, 1] }} 
-                  transition={{ repeat: Infinity, duration: 1 }}
-                  style={{ width: '8px', height: '8px', background: 'var(--color-primary)', borderRadius: '50%', boxShadow: '0 0 5px var(--color-primary)' }} 
-                />
-                <span style={{ color: 'var(--color-primary)' }}>ACTIVE_NODE</span>
-              </div>
-              <span>DIR://ROOT/{activeCategory ? activeCategory.toUpperCase() : 'ALL_TRANS'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <motion.div 
+                animate={{ opacity: [1, 0.4, 1] }} 
+                transition={{ repeat: Infinity, duration: 1 }}
+                style={{ width: '8px', height: '8px', background: 'var(--color-primary)', borderRadius: '50%', boxShadow: '0 0 5px var(--color-primary)' }} 
+              />
+              <span style={{ color: 'var(--color-primary)' }}>ACTIVE_NODE</span>
             </div>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
               <span className="hidden-mobile">STATUS://SECURE</span>
