@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Terminal, Unlock } from 'lucide-react'
+import { Terminal } from 'lucide-react'
 import type { Post } from '../types'
 
 interface PostCardProps {
@@ -53,7 +53,7 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
       style={{ width: '100%', justifyContent: 'center' }}
     >
       {isUnlocked ? (
-        <>ACCESS_GRANTED <Unlock size={14} style={{ color: 'var(--color-secondary)' }} /></>
+        <>READ</>
       ) : (
         <>DECRYPT_TRANS <Terminal size={14} style={{ marginLeft: '8px' }} /></>
       )}
