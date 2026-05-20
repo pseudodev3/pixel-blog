@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Terminal, Cpu, Zap, AlertTriangle } from 'lucide-react'
-import { useState, useEffect, useMemo } from 'react'
+import { Terminal, Cpu, Zap, AlertTriangle, Gamepad2 } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import treeBg from './assets/tree.webp'
 import type { Post, PixelBlogConfig } from './types'
+import { audio } from './utils/audio'
 
 // Components
 import { CRTOverlay } from './components/CRTOverlay'
@@ -20,6 +21,8 @@ interface AppProps {
   storageKey?: string
   /** Enable admin panel */
   enableAdmin?: boolean
+  /** Enable sound effects */
+  enableAudio?: boolean
   /** Custom theme colors */
   theme?: PixelBlogConfig['theme']
   /** Callback when post is read */
@@ -38,7 +41,7 @@ const DEFAULT_POSTS: Post[] = [
     category: "Graphics",
     excerpt: "Why low-res is high-fidelity for the soul. Exploring the aesthetic of limitations.",
     content: "In an age of 4K and photorealism, the pixel remains the fundamental unit of digital soul. By limiting our palette and resolution, we force the viewer's imagination to fill the gaps. This is the 'Uncanny Valley' in reverse—instead of being creeped out by almost-real faces, we are charmed by obviously-fake ones. Low-res isn't a limitation; it's a stylistic choice that prioritizes essence over detail.",
-    icon: undefined
+    icon: 'cpu'
   },
   {
     id: 2,
@@ -47,7 +50,7 @@ const DEFAULT_POSTS: Post[] = [
     category: "Code",
     excerpt: "Squeezing every cycle out of the CPU. A deep dive into assembly-style thinking.",
     content: "The programmers of the 80s were wizards. They didn't have gigabytes of RAM; they had kilobytes. Every byte was a battle. Modern web development has grown bloated, but we can still apply those lessons. Lazy loading, tree shaking, and efficient state management are the modern versions of bank-switching and sprite multiplexing. Treat your user's CPU with respect.",
-    icon: undefined
+    icon: 'zap'
   },
   {
     id: 3,
@@ -56,7 +59,7 @@ const DEFAULT_POSTS: Post[] = [
     category: "AI",
     excerpt: "When the algorithm starts dreaming in 8-bit. The intersection of neural networks and retro aesthetics.",
     content: "Artificial Intelligence is often portrayed as a sleek, sterile future. But what if we gave it the constraints of the past? Generative art that follows the rules of the NES or C64 palette has a soul that pure high-def generation lacks. It's about the patterns, the dithering, and the happy accidents that occur when logic meets limitation. The ghost in the machine prefers scanlines.",
-    icon: undefined
+    icon: 'terminal'
   }
 ]
 
@@ -65,6 +68,7 @@ export default function App({
   adminPassword = '1337',
   storageKey = 'pixel_blog',
   enableAdmin = true,
+  enableAudio = true,
   theme,
   onPostRead,
   onPostCreate,
@@ -76,6 +80,16 @@ export default function App({
   const [activePost, setActivePost] = useState<Post | null>(null)
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  
+  // Discovery States
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [isAudioEnabled, setIsAudioEnabled] = useState(enableAudio)
+
+  // Sync audio state with utility
+  useEffect(() => {
+    audio.setEnabled(isAudioEnabled)
+  }, [isAudioEnabled])
 
   // Load posts from localStorage or use initial/default
   useEffect(() => {
@@ -115,8 +129,6 @@ export default function App({
       }
     }
     
-    // We attach listener to the window but main.tsx will dispatch to the container
-    // For simplicity, we can also dispatch to window in main.tsx or find the container
     window.addEventListener('pixelblog:addPost', handleAddPost)
     return () => window.removeEventListener('pixelblog:addPost', handleAddPost)
   }, [posts])
@@ -128,12 +140,15 @@ export default function App({
     }
   }, [posts, isLoaded, onPostsChange])
 
-  const triggerStatus = (text: string) => {
+  const triggerStatus = useCallback((text: string, type: 'success' | 'error' | 'info' = 'info') => {
     setStatusMsg(text)
+    if (type === 'success') audio.playSuccess()
+    if (type === 'error') audio.playError()
     setTimeout(() => setStatusMsg(null), 3000)
-  }
+  }, [])
 
   const handleRead = (post: Post) => {
+    audio.playClick()
     setActivePost(post)
     if (onPostRead) onPostRead(post)
   }
@@ -143,17 +158,40 @@ export default function App({
       const newUnlocked = [...unlockedPosts, postId]
       setUnlockedPosts(newUnlocked)
       localStorage.setItem(`${storageKey}_unlocked`, JSON.stringify(newUnlocked))
+      audio.playDecrypt()
     }
   }
 
   const handleSavePost = (post: Post) => {
     setPosts(current => {
-      const updated = [post, ...current]
+      const existingIndex = current.findIndex(p => p.id === post.id)
+      let updated: Post[]
+      if (existingIndex > -1) {
+        updated = [...current]
+        updated[existingIndex] = post
+      } else {
+        updated = [post, ...current]
+      }
       localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
       return updated
     })
     if (onPostCreate) onPostCreate(post)
-    triggerStatus("NEW_TRANSMISSION_UPLOADING...")
+    triggerStatus(post.id ? "TRANSMISSION_UPDATED..." : "NEW_TRANSMISSION_UPLOADING...", 'success')
+  }
+
+  const handleDeletePost = (postId: number) => {
+    setPosts(current => {
+      const updated = current.filter(p => p.id !== postId)
+      localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
+      return updated
+    })
+    triggerStatus("TRANSMISSION_DELETED", 'error')
+  }
+
+  const handleImportPosts = (newPosts: Post[]) => {
+    setPosts(newPosts)
+    localStorage.setItem(`${storageKey}_posts`, JSON.stringify(newPosts))
+    triggerStatus("DATABASE_RESTORED_SUCCESSFULLY", 'success')
   }
 
   // Apply theme variables
@@ -180,21 +218,39 @@ export default function App({
     return style
   }, [theme])
 
-  // Get icon component based on category
-  const getPostIcon = (category: string) => {
-    switch (category) {
-      case 'Graphics': return <Cpu size={24} />
-      case 'Code': return <Zap size={24} />
-      case 'AI': return <Terminal size={24} />
-      default: return undefined
+  // Get unique categories for filtering
+  const categories = useMemo(() => {
+    const cats = new Set(posts.map(p => p.category))
+    return Array.from(cats).sort()
+  }, [posts])
+
+  // Filter and Search logic
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           post.content.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory = !activeCategory || post.category === activeCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [posts, searchQuery, activeCategory])
+
+  // Get icon component based on name
+  const getPostIcon = (iconName?: string, category?: string) => {
+    const name = iconName || (category === 'Graphics' ? 'cpu' : category === 'Code' ? 'zap' : 'terminal')
+    switch (name) {
+      case 'cpu': return <Cpu size={24} />
+      case 'zap': return <Zap size={24} />
+      case 'terminal': return <Terminal size={24} />
+      case 'gamepad': return <Gamepad2 size={24} />
+      default: return <Terminal size={24} />
     }
   }
 
-  // Add icon to posts that need it
-  const postsWithIcons = useMemo(() => posts.map(post => ({
+  // Add icon to posts
+  const postsWithIcons = useMemo(() => filteredPosts.map(post => ({
     ...post,
-    icon: post.icon || getPostIcon(post.category)
-  })), [posts])
+    renderedIcon: getPostIcon(post.icon, post.category)
+  })), [filteredPosts])
 
   if (!isLoaded) {
     return (
@@ -224,8 +280,11 @@ export default function App({
       <AnimatePresence>
         {isAdminOpen && enableAdmin && (
           <AdminTerminal 
+            posts={posts}
             onClose={() => setIsAdminOpen(false)} 
             onSave={handleSavePost}
+            onDelete={handleDeletePost}
+            onImport={handleImportPosts}
             adminPassword={adminPassword}
           />
         )}
@@ -239,7 +298,17 @@ export default function App({
         )}
       </AnimatePresence>
 
-      <Navbar onOpenAdmin={() => setIsAdminOpen(true)} showAdmin={enableAdmin} />
+      <Navbar 
+        onOpenAdmin={() => { audio.playClick(); setIsAdminOpen(true); }} 
+        showAdmin={enableAdmin}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        categories={categories}
+        isAudioEnabled={isAudioEnabled}
+        setIsAudioEnabled={setIsAudioEnabled}
+      />
 
       <main className="container">
         <div style={{ height: '2rem', display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
@@ -260,9 +329,9 @@ export default function App({
         <section style={{ marginTop: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', borderBottom: '4px solid var(--color-primary)', paddingBottom: '0.5rem' }}>
             <h2 style={{ fontSize: '1.2rem' }}>
-              Latest Transmissions
+              {activeCategory ? `Node: ${activeCategory}` : 'Latest Transmissions'}
             </h2>
-            <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>COUNT: {posts.length}</span>
+            <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>COUNT: {filteredPosts.length}</span>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
@@ -275,6 +344,12 @@ export default function App({
               />
             ))}
           </div>
+          
+          {filteredPosts.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '4rem', opacity: 0.5 }}>
+              <p style={{ fontSize: '0.8rem' }}>NO_TRANSMISSIONS_FOUND</p>
+            </div>
+          )}
         </section>
       </main>
 

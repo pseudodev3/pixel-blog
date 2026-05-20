@@ -51,9 +51,6 @@ function mountWithShadowDOM(
   // Mount React
   const root = ReactDOM.createRoot(reactRoot)
   
-  // Create ref for imperative API
-  const appRef = { current: null as any }
-  
   root.render(
     <React.StrictMode>
       <ErrorBoundary>
@@ -62,6 +59,8 @@ function mountWithShadowDOM(
           adminPassword={props.adminPassword}
           storageKey={props.storageKey}
           enableAdmin={props.enableAdmin !== false}
+          enableAudio={props.enableAudio !== false}
+          theme={props.theme}
           onPostRead={props.onPostRead}
           onPostCreate={props.onPostCreate}
         />
@@ -77,9 +76,8 @@ function mountWithShadowDOM(
       }
     },
     addPost: (post) => {
-      // Dispatch custom event for adding post
       const event = new CustomEvent('pixelblog:addPost', { detail: post })
-      container.dispatchEvent(event)
+      window.dispatchEvent(event)
     },
     getPosts: () => {
       const key = props.storageKey || 'pixel_blog'
@@ -90,19 +88,21 @@ function mountWithShadowDOM(
       const key = props.storageKey || 'pixel_blog'
       localStorage.removeItem(`${key}_posts`)
       localStorage.removeItem(`${key}_unlocked`)
+    },
+    setAudioEnabled: (enabled: boolean) => {
+      const event = new CustomEvent('pixelblog:setAudio', { detail: { enabled } })
+      window.dispatchEvent(event)
     }
   }
 }
 
 /**
  * Mount Pixel Blog without Shadow DOM (legacy mode)
- * Note: May have style conflicts with host page
  */
 function mountWithoutShadowDOM(
   container: HTMLElement,
   props: Omit<PixelBlogConfig, 'container'>
 ): PixelBlogInstance {
-  // Inject font if not already present
   if (!document.querySelector('link[href*="Press+Start+2P"]')) {
     const fontLink = document.createElement('link')
     fontLink.rel = 'stylesheet'
@@ -120,6 +120,7 @@ function mountWithoutShadowDOM(
           adminPassword={props.adminPassword}
           storageKey={props.storageKey}
           enableAdmin={props.enableAdmin !== false}
+          enableAudio={props.enableAudio !== false}
           theme={props.theme}
           onPostRead={props.onPostRead}
           onPostCreate={props.onPostCreate}
@@ -143,55 +144,34 @@ function mountWithoutShadowDOM(
       const key = props.storageKey || 'pixel_blog'
       localStorage.removeItem(`${key}_posts`)
       localStorage.removeItem(`${key}_unlocked`)
+    },
+    setAudioEnabled: (enabled: boolean) => {
+      const event = new CustomEvent('pixelblog:setAudio', { detail: { enabled } })
+      window.dispatchEvent(event)
     }
   }
 }
 
 /**
- * Main mount function - auto-detects best mounting strategy
+ * Main mount function
  */
 export function mountPixelBlog(config: PixelBlogConfig): PixelBlogInstance {
   const { container, ...props } = config
-  
-  // Resolve container
-  const containerEl = typeof container === 'string' 
-    ? document.querySelector(container) 
-    : container
-    
-  if (!containerEl) {
-    throw new Error(`[PixelBlog] Container not found: ${container}`)
-  }
-  
-  // Check if Shadow DOM is supported and use it for style isolation
+  const containerEl = typeof container === 'string' ? document.querySelector(container) : container
+  if (!containerEl) throw new Error(`[PixelBlog] Container not found: ${container}`)
   const useShadowDOM = 'attachShadow' in Element.prototype
-  
-  if (useShadowDOM) {
-    console.log('[PixelBlog] Mounting with Shadow DOM for style isolation')
-    return mountWithShadowDOM(containerEl as HTMLElement, props)
-  } else {
-    console.warn('[PixelBlog] Shadow DOM not supported, falling back to standard mount')
-    return mountWithoutShadowDOM(containerEl as HTMLElement, props)
-  }
+  if (useShadowDOM) return mountWithShadowDOM(containerEl as HTMLElement, props)
+  return mountWithoutShadowDOM(containerEl as HTMLElement, props)
 }
 
-/**
- * Auto-mount for standalone development
- */
 if (typeof window !== 'undefined') {
-  // Expose to window for UMD builds
   ;(window as any).PixelBlog = { mount: mountPixelBlog }
-  
-  // Auto-mount if #root exists (dev mode)
   const autoContainer = document.getElementById('root')
   if (autoContainer && !autoContainer.shadowRoot) {
-    mountPixelBlog({ 
-      container: autoContainer,
-      enableAdmin: true 
-    })
+    mountPixelBlog({ container: autoContainer, enableAdmin: true })
   }
 }
 
-// Re-export types
 export type { PixelBlogConfig, PixelBlogInstance, Post }
 export { ErrorBoundary }
 export default mountPixelBlog

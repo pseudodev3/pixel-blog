@@ -7,7 +7,7 @@ export interface Post {
   category: string
   excerpt: string
   content: string
-  icon?: React.ReactNode
+  icon?: string // Store as icon name (e.g., 'terminal', 'cpu')
 }
 
 export interface PixelBlogConfig {
@@ -38,6 +38,9 @@ export interface PixelBlogConfig {
   /** Enable/disable admin panel */
   enableAdmin?: boolean
   
+  /** Enable/disable sound effects */
+  enableAudio?: boolean
+  
   /** Storage key prefix for localStorage */
   storageKey?: string
 }
@@ -54,4 +57,7 @@ export interface PixelBlogInstance {
   
   /** Clear all data */
   clearData: () => void
+  
+  /** Toggle audio state */
+  setAudioEnabled: (enabled: boolean) => void
 }

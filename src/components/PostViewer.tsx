@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Terminal, Gamepad2, ArrowLeft, AlertTriangle } from 'lucide-react'
 import type { Post } from '../types'
+import { audio } from '../utils/audio'
 
 interface PostViewerProps {
   post: Post
@@ -36,7 +37,7 @@ export const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: PostViewerPr
       <div className="scanline-scroll" style={{ opacity: 0.1, zIndex: 1 }} />
       
       <div className="container" style={{ position: 'relative', padding: '4rem 2rem', zIndex: 2 }}>
-        <button className="pixel-button" onClick={onClose} style={{ marginBottom: '4rem' }}>
+        <button className="pixel-button" onClick={() => { audio.playClick(); onClose(); }} style={{ marginBottom: '4rem' }}>
           <ArrowLeft size={16} /> [RETURN_TO_BASE]
         </button>
         
@@ -145,7 +146,7 @@ export const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: PostViewerPr
             <p style={{ fontSize: '0.6rem', color: 'var(--color-accent)', letterSpacing: '6px', marginBottom: '3rem' }}>--- END OF TRANSMISSION ---</p>
             <button 
               className="pixel-button" 
-              onClick={onClose} 
+              onClick={() => { audio.playClick(); onClose(); }} 
               style={{ fontSize: '0.7rem' }}
             >
               CLOSE TERMINAL

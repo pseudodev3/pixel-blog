@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Terminal } from 'lucide-react'
 import type { Post } from '../types'
+import { audio } from '../utils/audio'
 
 interface PostCardProps {
   post: Post
@@ -15,6 +16,7 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     whileHover={{ y: -5 }}
+    onMouseEnter={() => audio.playHover()}
     className="pixel-border"
     style={{ 
       padding: '2rem', 
@@ -49,7 +51,7 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
 
     <button 
       className="pixel-button" 
-      onClick={() => onRead(post)}
+      onClick={() => { audio.playClick(); onRead(post); }}
       style={{ width: '100%', justifyContent: 'center' }}
     >
       {isUnlocked ? (
