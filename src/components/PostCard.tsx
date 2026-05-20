@@ -14,20 +14,48 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
+    whileHover={{ y: -5 }}
     className="pixel-border"
-    style={{ padding: '1.5rem', marginBottom: '2rem' }}
+    style={{ 
+      padding: '2rem', 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      position: 'relative',
+      overflow: 'hidden'
+    }}
   >
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-      <span style={{ color: 'var(--color-accent)', fontSize: '0.6rem' }}>[{post.category}]</span>
-      <span style={{ color: 'var(--color-secondary)', fontSize: '0.6rem' }}>{post.date}</span>
+    <div className="scanline-scroll" style={{ opacity: 0.2 }} />
+    
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
+        <span style={{ color: 'var(--color-accent)', fontSize: '0.6rem', border: '2px solid var(--color-accent)', padding: '2px 6px' }}>
+          {post.category}
+        </span>
+        <span style={{ color: 'var(--color-secondary)', fontSize: '0.5rem', opacity: 0.8 }}>
+          TIMESTAMP: {post.date.replace(/-/g, '.')}
+        </span>
+      </div>
+      
+      <h3 className="neon-text-primary" style={{ fontSize: '1.1rem', marginBottom: '1.2rem', lineHeight: '1.4' }}>
+        {post.title}
+      </h3>
+      
+      <p style={{ fontSize: '0.7rem', color: '#ccc', marginBottom: '2rem', lineHeight: '1.6', opacity: 0.9 }}>
+        {post.excerpt}
+      </p>
     </div>
-    <h3 className="neon-text-primary" style={{ fontSize: '1rem', marginBottom: '1rem' }}>{post.title}</h3>
-    <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '1.5rem' }}>{post.excerpt}</p>
-    <button className="pixel-button" onClick={() => onRead(post)}>
+
+    <button 
+      className="pixel-button" 
+      onClick={() => onRead(post)}
+      style={{ width: '100%', justifyContent: 'center' }}
+    >
       {isUnlocked ? (
-        <>READ MORE <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
+        <>ACCESS_GRANTED <Unlock size={14} style={{ color: 'var(--color-secondary)' }} /></>
       ) : (
-        <>READ MORE <Terminal size={12} style={{ marginLeft: '8px' }} /></>
+        <>DECRYPT_TRANS <Terminal size={14} style={{ marginLeft: '8px' }} /></>
       )}
     </button>
   </motion.div>

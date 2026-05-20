@@ -242,26 +242,37 @@ export default function App({
       <Navbar onOpenAdmin={() => setIsAdminOpen(true)} showAdmin={enableAdmin} />
 
       <main className="container">
-        <header style={{ textAlign: 'center', padding: '4rem 0' }}>
+        <header style={{ textAlign: 'center', padding: '6rem 0' }}>
           <motion.h1 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="neon-text-primary"
-            style={{ fontSize: '3rem', marginBottom: '1rem' }}
+            className="neon-text-primary glitch-text"
+            data-text="PIXEL_BLOG"
+            style={{ fontSize: '3.5rem', marginBottom: '1.5rem', position: 'relative' }}
           >
             PIXEL_BLOG
           </motion.h1>
           
-          <div style={{ height: '2rem', marginTop: '2rem' }}>
-            <AnimatePresence>
-              {statusMsg && (
+          <div style={{ height: '3rem', marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+            <AnimatePresence mode="wait">
+              {statusMsg ? (
                 <motion.p
+                  key="status"
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -10, opacity: 0 }}
-                  style={{ fontSize: '0.8rem', color: 'var(--color-accent)' }}
+                  style={{ fontSize: '0.7rem', color: 'var(--color-accent)', letterSpacing: '4px' }}
                 >
                   {statusMsg}
+                </motion.p>
+              ) : (
+                <motion.p
+                  key="tagline"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.6 }}
+                  style={{ fontSize: '0.6rem', color: 'var(--color-text)', letterSpacing: '2px' }}
+                >
+                  SYSTEM_STATUS: OPERATIONAL // V.0.2.0
                 </motion.p>
               )}
             </AnimatePresence>
@@ -269,17 +280,23 @@ export default function App({
         </header>
 
         <section style={{ marginTop: '2rem' }}>
-          <h2 style={{ fontSize: '1.2rem', marginBottom: '2rem', borderBottom: '4px solid var(--color-primary)', display: 'inline-block' }}>
-            Latest Transmission
-          </h2>
-          {postsWithIcons.map((post) => (
-            <PostCard 
-              key={post.id} 
-              post={post} 
-              onRead={handleRead} 
-              isUnlocked={unlockedPosts.includes(post.id)} 
-            />
-          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', borderBottom: '4px solid var(--color-primary)', paddingBottom: '0.5rem' }}>
+            <h2 style={{ fontSize: '1.2rem' }}>
+              Latest Transmissions
+            </h2>
+            <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>COUNT: {posts.length}</span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
+            {postsWithIcons.map((post) => (
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onRead={handleRead} 
+                isUnlocked={unlockedPosts.includes(post.id)} 
+              />
+            ))}
+          </div>
         </section>
       </main>
 
