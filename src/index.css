@@ -131,13 +131,13 @@
 }
 
 .pixel-blog-wrapper .hotel-logo.unlit {
-  color: #222;
-  text-shadow: none;
+  color: #551155; /* Dark, dim magenta for the "dead tube" look */
+  text-shadow: 1px 1px 0 #000;
 }
 
 .pixel-blog-wrapper .hotel-logo.unlit span {
   animation: none !important;
-  opacity: 0.3;
+  opacity: 0.6; /* Increased opacity for better visibility */
 }
 
 .pixel-blog-wrapper .flicker-1 { animation: neon-flicker-1 4s infinite; }
