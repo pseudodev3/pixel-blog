@@ -242,44 +242,22 @@ export default function App({
       <Navbar onOpenAdmin={() => setIsAdminOpen(true)} showAdmin={enableAdmin} />
 
       <main className="container">
-        <header style={{ textAlign: 'center', padding: '6rem 0' }}>
-          <motion.h1 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="neon-text-primary glitch-text"
-            data-text="PIXEL_BLOG"
-            style={{ fontSize: '3.5rem', marginBottom: '1.5rem', position: 'relative' }}
-          >
-            PIXEL_BLOG
-          </motion.h1>
-          
-          <div style={{ height: '3rem', marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
-            <AnimatePresence mode="wait">
-              {statusMsg ? (
-                <motion.p
-                  key="status"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -10, opacity: 0 }}
-                  style={{ fontSize: '0.7rem', color: 'var(--color-accent)', letterSpacing: '4px' }}
-                >
-                  {statusMsg}
-                </motion.p>
-              ) : (
-                <motion.p
-                  key="tagline"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  style={{ fontSize: '0.6rem', color: 'var(--color-text)', letterSpacing: '2px' }}
-                >
-                  SYSTEM_STATUS: OPERATIONAL // V.0.2.0
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
-        </header>
+        <div style={{ height: '2rem', display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <AnimatePresence>
+            {statusMsg && (
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                style={{ fontSize: '0.7rem', color: 'var(--color-accent)', letterSpacing: '4px' }}
+              >
+                {statusMsg}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
 
-        <section style={{ marginTop: '2rem' }}>
+        <section style={{ marginTop: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', borderBottom: '4px solid var(--color-primary)', paddingBottom: '0.5rem' }}>
             <h2 style={{ fontSize: '1.2rem' }}>
               Latest Transmissions

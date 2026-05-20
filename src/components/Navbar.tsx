@@ -12,11 +12,11 @@ export const Navbar = ({ onOpenAdmin, showAdmin }: NavbarProps) => (
     <motion.div 
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="neon-text-primary"
-      style={{ fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer' }}
+      className="hotel-logo"
+      style={{ cursor: 'pointer' }}
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
     >
-      PIXEL_LOG
+      PIXEL BLOG
     </motion.div>
     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
       {showAdmin && (
