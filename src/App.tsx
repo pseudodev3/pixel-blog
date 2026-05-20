@@ -1,8 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Terminal, Gamepad2, Cpu, Zap, Lock, Unlock, Plus, X, ArrowLeft, AlertTriangle } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Terminal, Cpu, Zap, AlertTriangle } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
 import treeBg from './assets/tree.webp'
-import type { Post } from './types'
+import type { Post, PixelBlogConfig } from './types'
+
+// Components
+import { CRTOverlay } from './components/CRTOverlay'
+import { Navbar } from './components/Navbar'
+import { PostCard } from './components/PostCard'
+import { PostViewer } from './components/PostViewer'
+import { AdminTerminal } from './components/AdminTerminal'
 
 interface AppProps {
   /** Initial posts data */
@@ -13,6 +20,8 @@ interface AppProps {
   storageKey?: string
   /** Enable admin panel */
   enableAdmin?: boolean
+  /** Custom theme colors */
+  theme?: PixelBlogConfig['theme']
   /** Callback when post is read */
   onPostRead?: (post: Post) => void
   /** Callback when post is created */
@@ -51,322 +60,12 @@ const DEFAULT_POSTS: Post[] = [
   }
 ]
 
-const CRTOverlay = () => (
-  <>
-    <div className="crt-overlay" />
-    <div className="crt-flicker" />
-  </>
-)
-
-const Navbar = ({ onOpenAdmin, showAdmin }: { onOpenAdmin: () => void, showAdmin: boolean }) => (
-  <nav className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2rem 1rem' }}>
-    <motion.div 
-      initial={{ x: -100, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className="neon-text-primary"
-      style={{ fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer' }}
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-    >
-      PIXEL_LOG
-    </motion.div>
-    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-      {showAdmin && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.1, color: 'var(--color-primary)' }}
-          onClick={onOpenAdmin}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: 'var(--color-text)', 
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          <Plus size={20} />
-        </motion.button>
-      )}
-    </div>
-  </nav>
-)
-
-const PostCard = ({ post, onRead, isUnlocked }: { post: Post, onRead: (post: Post) => void, isUnlocked: boolean }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    className="pixel-border"
-    style={{ padding: '1.5rem', marginBottom: '2rem' }}
-  >
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-      <span style={{ color: 'var(--color-accent)', fontSize: '0.6rem' }}>[{post.category}]</span>
-      <span style={{ color: 'var(--color-secondary)', fontSize: '0.6rem' }}>{post.date}</span>
-    </div>
-    <h3 className="neon-text-primary" style={{ fontSize: '1rem', marginBottom: '1rem' }}>{post.title}</h3>
-    <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '1.5rem' }}>{post.excerpt}</p>
-    <button className="pixel-button" onClick={() => onRead(post)}>
-      {isUnlocked ? (
-        <>READ MORE <Unlock size={12} style={{ color: 'var(--color-secondary)' }} /></>
-      ) : (
-        <>READ MORE <Terminal size={12} style={{ marginLeft: '8px' }} /></>
-      )}
-    </button>
-  </motion.div>
-)
-
-const PostViewer = ({ post, onClose, isUnlocked, onUnlock }: { post: Post, onClose: () => void, isUnlocked: boolean, onUnlock: () => void }) => {
-  const [isDecrypting, setIsDecrypting] = useState(!isUnlocked)
-  
-  useEffect(() => {
-    if (!isUnlocked) {
-      const timer = setTimeout(() => {
-        onUnlock()
-        setIsDecrypting(false)
-      }, 1500)
-      return () => clearTimeout(timer)
-    }
-  }, [isUnlocked, onUnlock])
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.1 }}
-      style={{
-        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'var(--color-bg)', zIndex: 9000, overflowY: 'auto', padding: '1rem'
-      }}
-    >
-      <div className="container" style={{ position: 'relative', padding: '1rem' }}>
-        <button className="pixel-button" onClick={onClose} style={{ marginBottom: '2rem' }}>
-          <ArrowLeft size={16} /> BACK
-        </button>
-        
-        <div style={{ marginBottom: '2rem' }}>
-          <motion.h1 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="neon-text-primary" 
-            style={{ fontSize: '1.4rem', marginBottom: '1rem', lineHeight: '1.3' }}
-          >
-            {post.title}
-          </motion.h1>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.6rem', color: 'var(--color-secondary)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Terminal size={14} /> {post.date}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Gamepad2 size={14} /> {post.category}
-            </span>
-          </div>
-        </div>
-        
-        <div style={{ position: 'relative' }}>
-          <div 
-            className="pixel-border" 
-            style={{ 
-              padding: '2.5rem', 
-              lineHeight: '1.8', 
-              fontSize: '0.9rem',
-              filter: (isUnlocked || isDecrypting) ? 'none' : 'blur(12px)',
-              transition: 'filter 0.8s ease',
-              userSelect: isUnlocked ? 'auto' : 'none',
-              pointerEvents: isUnlocked ? 'auto' : 'none',
-              minHeight: '400px',
-              background: 'rgba(255,255,255,0.02)'
-            }}
-          >
-            {isUnlocked ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1 }}
-              >
-                {post.content}
-              </motion.div>
-            ) : isDecrypting ? (
-              <div style={{ color: 'var(--color-accent)', fontFamily: 'monospace' }}>
-                {[...Array(20)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.1, delay: i * 0.05 }}
-                  >
-                    {Math.random().toString(16).substring(2, 40)}
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ opacity: 0.5 }}>
-                {post.content}
-                <div style={{ marginTop: '2rem' }}>
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} style={{ height: '1.2rem', background: '#222', marginBottom: '0.8rem', width: `${Math.random() * 40 + 60}%` }} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {isDecrypting && (
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 20,
-              background: 'rgba(0,0,0,0.8)'
-            }}>
-              <div style={{ width: '300px', height: '30px', border: '4px solid var(--color-accent)', position: 'relative' }}>
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1.5, ease: "linear" }}
-                  style={{ height: '100%', background: 'var(--color-accent)' }}
-                />
-              </div>
-              <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--color-accent)', letterSpacing: '4px' }}>DECRYPTING_DATA...</p>
-            </div>
-          )}
-        </div>
-
-        {isUnlocked && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ marginTop: '4rem', textAlign: 'center', borderTop: '4px solid #222', padding: '2rem' }}
-          >
-            <AlertTriangle size={24} style={{ color: 'var(--color-accent)', marginBottom: '1rem' }} />
-            <p style={{ fontSize: '0.6rem', color: 'var(--color-accent)', letterSpacing: '4px' }}>END OF ENCRYPTED TRANSMISSION</p>
-            <button 
-              className="pixel-button" 
-              onClick={onClose} 
-              style={{ marginTop: '2rem', fontSize: '0.6rem' }}
-            >
-              RETURN TO TERMINAL
-            </button>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  )
-}
-
-const AdminTerminal = ({ onClose, onSave, adminPassword }: { onClose: () => void, onSave: (post: Post) => void, adminPassword: string }) => {
-  const [step, setStep] = useState<'auth' | 'write'>('auth')
-  const [pass, setPass] = useState('')
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [category, setCategory] = useState('USER')
-  const [error, setError] = useState(false)
-
-  const handleAuth = () => {
-    if (pass === adminPassword) setStep('write')
-    else {
-      setError(true)
-      setTimeout(() => setError(false), 1000)
-    }
-  }
-  
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{
-        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'rgba(0,0,0,0.95)', zIndex: 10000, display: 'flex',
-        alignItems: 'center', justifyContent: 'center', padding: '1rem'
-      }}
-    >
-      <div className="pixel-border" style={{ width: '100%', maxWidth: '600px', background: '#000', padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-          <h2 className="neon-text-primary" style={{ fontSize: '1rem' }}>{step === 'auth' ? 'SYSTEM_BIOS' : 'NEW_TRANS'}</h2>
-          <X style={{ cursor: 'pointer' }} onClick={onClose} />
-        </div>
-        
-        {step === 'auth' ? (
-          <div style={{ textAlign: 'center' }}>
-            <Lock size={48} style={{ marginBottom: '1rem', color: error ? 'red' : 'var(--color-text)' }} />
-            <p style={{ fontSize: '0.7rem', marginBottom: '1rem' }}>ENTER ACCESS CODE_</p>
-            <input 
-              type="password"
-              value={pass}
-              autoFocus
-              onChange={e => setPass(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAuth()}
-              style={{ width: '100%', background: '#111', border: '2px solid var(--color-text)', color: 'var(--color-accent)', padding: '0.8rem', textAlign: 'center', letterSpacing: '8px' }}
-            />
-            {error && <p style={{ color: 'red', fontSize: '0.5rem', marginTop: '1rem' }}>INVALID ACCESS CODE</p>}
-          </div>
-        ) : (
-          <>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.6rem', marginBottom: '0.5rem' }}>TITLE_</label>
-              <input 
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                style={{ width: '100%', background: '#111', border: '2px solid var(--color-text)', color: 'var(--color-primary)', padding: '0.8rem', fontFamily: 'inherit' }}
-              />
-            </div>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.6rem', marginBottom: '0.5rem' }}>CATEGORY_</label>
-              <input 
-                value={category}
-                onChange={e => setCategory(e.target.value.toUpperCase())}
-                style={{ width: '100%', background: '#111', border: '2px solid var(--color-text)', color: 'var(--color-secondary)', padding: '0.8rem', fontFamily: 'inherit' }}
-              />
-            </div>
-            <div style={{ marginBottom: '2rem' }}>
-              <label style={{ display: 'block', fontSize: '0.6rem', marginBottom: '0.5rem' }}>CONTENT_</label>
-              <textarea 
-                rows={4}
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                style={{ width: '100%', background: '#111', border: '2px solid var(--color-text)', color: 'var(--color-secondary)', padding: '0.8rem', fontFamily: 'inherit' }}
-              />
-            </div>
-            <button 
-              className="pixel-button" 
-              style={{ width: '100%' }}
-              onClick={() => {
-                if(title && content) {
-                  onSave({ 
-                    title, 
-                    content, 
-                    excerpt: content.substring(0, 100) + '...', 
-                    id: Date.now(), 
-                    date: new Date().toISOString().split('T')[0], 
-                    category: category || 'USER',
-                    icon: undefined
-                  });
-                  onClose();
-                }
-              }}
-            >
-              UPLOAD TO MAIN_FRAME
-            </button>
-          </>
-        )}
-      </div>
-    </motion.div>
-  )
-}
-
 export default function App({
   initialPosts,
   adminPassword = '1337',
   storageKey = 'pixel_blog',
   enableAdmin = true,
+  theme,
   onPostRead,
   onPostCreate,
   onPostsChange
@@ -403,6 +102,25 @@ export default function App({
     setIsLoaded(true)
   }, [initialPosts, storageKey])
 
+  // Listen for programmatic post additions
+  useEffect(() => {
+    const handleAddPost = (e: any) => {
+      if (e.detail) {
+        const newPost: Post = {
+          ...e.detail,
+          id: Date.now(),
+          date: new Date().toISOString().split('T')[0]
+        }
+        handleSavePost(newPost)
+      }
+    }
+    
+    // We attach listener to the window but main.tsx will dispatch to the container
+    // For simplicity, we can also dispatch to window in main.tsx or find the container
+    window.addEventListener('pixelblog:addPost', handleAddPost)
+    return () => window.removeEventListener('pixelblog:addPost', handleAddPost)
+  }, [posts])
+
   // Notify parent of posts changes
   useEffect(() => {
     if (isLoaded && onPostsChange) {
@@ -429,12 +147,38 @@ export default function App({
   }
 
   const handleSavePost = (post: Post) => {
-    const updated = [post, ...posts]
-    setPosts(updated)
-    localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
+    setPosts(current => {
+      const updated = [post, ...current]
+      localStorage.setItem(`${storageKey}_posts`, JSON.stringify(updated))
+      return updated
+    })
     if (onPostCreate) onPostCreate(post)
     triggerStatus("NEW_TRANSMISSION_UPLOADING...")
   }
+
+  // Apply theme variables
+  const wrapperStyle = useMemo(() => {
+    const style: React.CSSProperties = {
+      minHeight: '100vh', 
+      position: 'relative',
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${treeBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      backgroundRepeat: 'no-repeat',
+      backgroundColor: '#000'
+    }
+
+    if (theme) {
+      if (theme.colorBg) (style as any)['--color-bg'] = theme.colorBg
+      if (theme.colorPrimary) (style as any)['--color-primary'] = theme.colorPrimary
+      if (theme.colorSecondary) (style as any)['--color-secondary'] = theme.colorSecondary
+      if (theme.colorAccent) (style as any)['--color-accent'] = theme.colorAccent
+      if (theme.colorText) (style as any)['--color-text'] = theme.colorText
+    }
+
+    return style
+  }, [theme])
 
   // Get icon component based on category
   const getPostIcon = (category: string) => {
@@ -447,10 +191,10 @@ export default function App({
   }
 
   // Add icon to posts that need it
-  const postsWithIcons = posts.map(post => ({
+  const postsWithIcons = useMemo(() => posts.map(post => ({
     ...post,
     icon: post.icon || getPostIcon(post.category)
-  }))
+  })), [posts])
 
   if (!isLoaded) {
     return (
@@ -474,16 +218,7 @@ export default function App({
   }
 
   return (
-    <div className="pixel-blog-wrapper" style={{ 
-      minHeight: '100vh', 
-      position: 'relative',
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${treeBg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      backgroundRepeat: 'no-repeat',
-      backgroundColor: '#000'
-    }}>
+    <div className="pixel-blog-wrapper" style={wrapperStyle}>
       <CRTOverlay />
       
       <AnimatePresence>

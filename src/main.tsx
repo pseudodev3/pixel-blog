@@ -120,6 +120,7 @@ function mountWithoutShadowDOM(
           adminPassword={props.adminPassword}
           storageKey={props.storageKey}
           enableAdmin={props.enableAdmin !== false}
+          theme={props.theme}
           onPostRead={props.onPostRead}
           onPostCreate={props.onPostCreate}
         />
@@ -131,7 +132,7 @@ function mountWithoutShadowDOM(
     destroy: () => root.unmount(),
     addPost: (post) => {
       const event = new CustomEvent('pixelblog:addPost', { detail: post })
-      container.dispatchEvent(event)
+      window.dispatchEvent(event)
     },
     getPosts: () => {
       const key = props.storageKey || 'pixel_blog'
