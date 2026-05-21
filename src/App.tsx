@@ -94,14 +94,17 @@ export default function App({
   useEffect(() => {
     const loadData = async () => {
       let cloudPosts: Post[] | null = null;
+      let cloudSuccess = false;
       
       // 1. Try to fetch from Cloud
       try {
         const res = await fetch(`/api/posts?storageKey=${storageKey}`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          // Even if data is [], we consider it a success from cloud
+          if (Array.isArray(data)) {
             cloudPosts = data;
+            cloudSuccess = true;
           }
         }
       } catch (e) {
@@ -109,10 +112,22 @@ export default function App({
       }
 
       // 2. Resolve final posts
-      if (cloudPosts) {
-        setPosts(cloudPosts);
-        localStorage.setItem(`${storageKey}_posts`, JSON.stringify(cloudPosts));
+      if (cloudSuccess && cloudPosts !== null) {
+        // If cloud is successful, use it (even if empty, unless it's first run with defaults)
+        if (cloudPosts.length > 0) {
+          setPosts(cloudPosts);
+          localStorage.setItem(`${storageKey}_posts`, JSON.stringify(cloudPosts));
+        } else {
+          // If cloud is empty, check local or use defaults
+          const saved = localStorage.getItem(`${storageKey}_posts`)
+          if (saved) {
+            setPosts(JSON.parse(saved))
+          } else {
+            setPosts(initialPosts || DEFAULT_POSTS)
+          }
+        }
       } else {
+        // Fetch failed, use local cache
         const saved = localStorage.getItem(`${storageKey}_posts`)
         if (saved) {
           try {
@@ -134,7 +149,7 @@ export default function App({
   // Helper to sync to cloud
   const syncToCloud = async (updatedPosts: Post[]) => {
     try {
-      await fetch('/api/save', {
+      const res = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -143,8 +158,15 @@ export default function App({
           storageKey
         })
       });
+      
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[PixelBlog] Sync failed:', err);
+        triggerStatus(`SYNC_ERROR: ${err.error || 'UNAUTHORIZED'}`, 'error');
+      }
     } catch (e) {
-      console.error('[PixelBlog] Failed to sync to cloud:', e);
+      console.error('[PixelBlog] Network error during sync:', e);
+      triggerStatus("SYNC_NETWORK_ERROR", 'error');
     }
   }
 
