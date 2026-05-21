@@ -62,8 +62,7 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
               lineHeight: '2', 
               fontSize: '1rem',
               minHeight: '500px',
-              background: 'rgba(255,255,255,0.03)',
-              boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5)'
+              background: 'rgba(255,255,255,0.03)'
             }}
           >
             <motion.div

@@ -173,8 +173,6 @@
   letter-spacing: 4px;
   position: relative;
   text-shadow: 
-    0 0 5px var(--color-primary),
-    0 0 10px var(--color-primary),
     2px 2px 0 #000;
   display: flex;
   gap: 0;
@@ -197,7 +195,7 @@
 @keyframes neon-flicker-1 {
   0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
     opacity: 1;
-    text-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary), 2px 2px 0 #000;
+    text-shadow: 2px 2px 0 #000;
   }
   20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
     opacity: 0.4;
@@ -208,7 +206,7 @@
 @keyframes neon-flicker-2 {
   0%, 45%, 47%, 48%, 51%, 52%, 100% {
     opacity: 1;
-    text-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary), 2px 2px 0 #000;
+    text-shadow: 2px 2px 0 #000;
   }
   46%, 47.5%, 50%, 51.5% {
     opacity: 0.2;
@@ -219,7 +217,7 @@
 @keyframes neon-flicker-3 {
   0%, 80%, 82%, 83%, 85%, 86%, 100% {
     opacity: 1;
-    text-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary), 2px 2px 0 #000;
+    text-shadow: 2px 2px 0 #000;
   }
   81%, 82.5%, 84%, 85.5% {
     opacity: 0.3;
@@ -300,6 +298,15 @@
   }
   
   .pixel-blog-wrapper .pixel-button {
+    padding: 0.8rem 1rem;
+    font-size: 0.6rem;
+  }
+
+  .pixel-blog-wrapper h1 { font-size: 1.8rem !important; }
+  .pixel-blog-wrapper h2 { font-size: 0.9rem !important; }
+  .pixel-blog-wrapper h3 { font-size: 0.8rem !important; }
+}
+pixel-button {
     padding: 0.8rem 1rem;
     font-size: 0.6rem;
   }
