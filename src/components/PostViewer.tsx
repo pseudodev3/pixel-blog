@@ -37,8 +37,7 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="neon-text-primary glitch-text pixel-shimmer" 
-            data-text={post.title}
+            className="neon-text-primary pixel-shimmer" 
             style={{ fontSize: '2.5rem', marginBottom: '1.5rem', lineHeight: '1.1', display: 'inline-block', paddingRight: '2rem' }}
           >
             {post.title}
