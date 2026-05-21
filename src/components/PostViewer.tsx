@@ -28,12 +28,6 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
         </button>
         
         <div style={{ marginBottom: '4rem', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div style={{ width: '40px', height: '2px', background: 'var(--color-primary)' }} />
-            <span style={{ fontSize: '0.5rem', letterSpacing: '4px', opacity: 0.5 }}>IDENT://SECURE_NODE</span>
-            <div style={{ flex: 1, height: '2px', background: '#111' }} />
-          </div>
-          
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -42,16 +36,17 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
           >
             {post.title}
           </motion.h1>
-          
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', fontSize: '0.6rem', color: 'var(--color-secondary)', opacity: 0.7, borderTop: '2px solid #111', paddingTop: '1.5rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              <Terminal size={14} /> DATE://{post.date.replace(/-/g, '.')}
+              <Terminal size={14} /> DATE: {post.date.replace(/-/g, '.')}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              <Gamepad2 size={14} /> NODE://{post.category}
+              <Gamepad2 size={14} /> NODE: {post.category}
             </span>
           </div>
         </div>
+
         
         <div style={{ position: 'relative' }}>
           <div 
