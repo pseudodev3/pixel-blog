@@ -75,7 +75,6 @@ export default function App({
   onPostsChange
 }: AppProps) {
   const [posts, setPosts] = useState<Post[]>([])
-  const [unlockedPosts, setUnlockedPosts] = useState<number[]>([])
   const [isAdminOpen, setIsAdminOpen] = useState(false)
   const [activePost, setActivePost] = useState<Post | null>(null)
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
@@ -126,15 +125,6 @@ export default function App({
         }
       }
 
-      // 3. Load unlocked state (always local for user privacy)
-      const savedUnlocked = localStorage.getItem(`${storageKey}_unlocked`)
-      if (savedUnlocked) {
-        try {
-          setUnlockedPosts(JSON.parse(savedUnlocked))
-        } catch (e) {
-          console.error('[PixelBlog] Failed to parse unlocked posts:', e)
-        }
-      }
       setIsLoaded(true)
     }
 
@@ -193,15 +183,6 @@ export default function App({
     audio.playClick()
     setActivePost(post)
     if (onPostRead) onPostRead(post)
-  }
-
-  const handleUnlock = (postId: number) => {
-    if (!unlockedPosts.includes(postId)) {
-      const newUnlocked = [...unlockedPosts, postId]
-      setUnlockedPosts(newUnlocked)
-      localStorage.setItem(`${storageKey}_unlocked`, JSON.stringify(newUnlocked))
-      audio.playDecrypt()
-    }
   }
 
   const handleSavePost = (post: Post) => {
@@ -337,8 +318,6 @@ export default function App({
           <PostViewer 
             post={activePost} 
             onClose={() => setActivePost(null)} 
-            isUnlocked={unlockedPosts.includes(activePost.id)}
-            onUnlock={() => handleUnlock(activePost.id)}
           />
         )}
       </AnimatePresence>
@@ -387,13 +366,11 @@ export default function App({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
-
             {postsWithIcons.map((post) => (
               <PostCard 
                 key={post.id} 
                 post={post} 
                 onRead={handleRead} 
-                isUnlocked={unlockedPosts.includes(post.id)} 
               />
             ))}
           </div>

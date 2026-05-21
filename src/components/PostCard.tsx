@@ -7,10 +7,9 @@ import { audio } from '../utils/audio'
 interface PostCardProps {
   post: Post
   onRead: (post: Post) => void
-  isUnlocked: boolean
 }
 
-export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
+export const PostCard = ({ post, onRead }: PostCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -56,11 +55,7 @@ export const PostCard = ({ post, onRead, isUnlocked }: PostCardProps) => (
       onClick={() => { audio.playClick(); onRead(post); }}
       style={{ width: '100%', justifyContent: 'center' }}
     >
-      {isUnlocked ? (
-        <>READ</>
-      ) : (
-        <>DECRYPT_TRANS <Terminal size={14} style={{ marginLeft: '8px' }} /></>
-      )}
+      READ
     </button>
   </motion.div>
 )
