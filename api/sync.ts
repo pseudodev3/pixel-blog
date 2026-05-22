@@ -1,27 +1,8 @@
 import { kv } from '@vercel/kv';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const USERNAME = 'ghhosttdn42';
-
-// Tiered Priority: Direct Nitter (Best) -> RSSHub -> RSS-Bridge
-const NITTER_INSTANCES = [
-  'https://nitter.at',
-  'https://nitter.poast.org',
-  'https://nitter.lacontrevoie.fr',
-  'https://nitter.privacydev.net'
-];
-
-const RSSHUB_INSTANCES = [
-  'https://rsshub.app',
-  'https://rsshub.moe',
-  'https://rsshub.at'
-];
-
-const RSS_BRIDGE_INSTANCES = [
-  'https://wtf.roflcopter.fr/rss-bridge',
-  'https://rss-bridge.org/bridge01',
-  'https://rss-bridge.lewd.tech'
-];
+const BSKY_HANDLE = 'ghhosttdn42.bsky.social';
+const RSS_URL = `https://bsky.app/profile/${BSKY_HANDLE}/rss`;
 
 interface Post {
   id: number;
@@ -45,63 +26,6 @@ function cleanHtml(html: string): string {
     .trim();
 }
 
-async function fetchWithFallback(path: string) {
-  const userAgents = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-  ];
-
-  const headers = { 
-    'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
-    'Accept': 'application/rss+xml, application/xml, text/xml',
-  };
-
-  const isValidRss = (text: string) => {
-    return (text.includes('<rss') || text.includes('<feed')) && 
-           !text.includes('whitelist') && 
-           !text.includes('HttpException') && 
-           !text.includes('Page Not Found');
-  };
-
-  // 1. Try Nitter Direct
-  for (const instance of NITTER_INSTANCES) {
-    try {
-      const response = await fetch(`${instance}/${path}`, { headers });
-      if (response.ok) {
-        const text = await response.text();
-        if (isValidRss(text)) return text;
-      }
-    } catch (e) { console.warn(`Nitter ${instance} failed`); }
-  }
-
-  // 2. Try RSSHub (specifically for Twitter)
-  for (const instance of RSSHUB_INSTANCES) {
-    try {
-      const rsshubUrl = `${instance}/twitter/user/${USERNAME}`;
-      const response = await fetch(rsshubUrl, { headers });
-      if (response.ok) {
-        const text = await response.text();
-        if (isValidRss(text)) return text;
-      }
-    } catch (e) { console.warn(`RSSHub ${instance} failed`); }
-  }
-
-  // 3. Try RSS-Bridge
-  for (const instance of RSS_BRIDGE_INSTANCES) {
-    try {
-      // Prefer NitterBridge via RSS-Bridge as it's often more stable than the direct TwitterBridge
-      const nitterBridgeUrl = `${instance}/?action=display&bridge=NitterBridge&username=${USERNAME}&format=Atom`;
-      const response = await fetch(nitterBridgeUrl, { headers });
-      if (response.ok) {
-        const text = await response.text();
-        if (isValidRss(text)) return text;
-      }
-    } catch (e) { console.warn(`RSS-Bridge ${instance} failed`); }
-  }
-
-  throw new Error('All sync vectors failed to return valid RSS data');
-}
-
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -117,20 +41,29 @@ export default async function handler(
   }
 
   try {
-    const rssText = await fetchWithFallback(`${USERNAME}/with_replies/rss`);
+    const res = await fetch(RSS_URL, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (PixelBlog Sync Engine)' }
+    });
+
+    if (!res.ok) {
+      throw new Error(`Bluesky RSS returned ${res.status}`);
+    }
+
+    const rssText = await res.text();
     const items: Post[] = [];
-    const itemMatches = rssText.matchAll(/<(item|entry)>([\s\S]*?)<\/(item|entry)>/g);
+    
+    // Bluesky uses standard RSS <item> tags
+    const itemMatches = rssText.matchAll(/<item>([\s\S]*?)<\/item>/g);
 
     for (const match of itemMatches) {
-      const itemContent = match[2];
-      const title = itemContent.match(/<title>(.*?)<\/title>/)?.[1] || 'X Update';
-      const link = itemContent.match(/<link[^>]*?href="(.*?)"/)?.[1] || itemContent.match(/<link>(.*?)<\/link>/)?.[1] || '';
-      const pubDate = itemContent.match(/<(pubDate|updated)>(.*?)<\/(pubDate|updated)>/)?.[2] || '';
-      const description = itemContent.match(/<(description|content|summary)[\s\S]*?>([\s\S]*?)<\/(description|content|summary)>/)?.[2] || '';
+      const itemContent = match[1];
+      const title = itemContent.match(/<title>(.*?)<\/title>/)?.[1] || 'New Transmission';
+      const link = itemContent.match(/<link>(.*?)<\/link>/)?.[1] || '';
+      const pubDate = itemContent.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+      const description = itemContent.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
 
-      if (!link || link.length < 10) continue; // Skip invalid entries
-
-      const tweetId = link.split('/').pop()?.split('?')[0] || Math.random().toString(36).substring(7);
+      // Bluesky IDs are usually at the end of the URL (at://...)
+      const bskyId = link.split('/').pop() || Math.random().toString(36).substring(7);
       const cleanContent = cleanHtml(description.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'));
       
       const dateObj = new Date(pubDate);
@@ -138,33 +71,40 @@ export default async function handler(
         ? new Date().toISOString().split('T')[0] 
         : dateObj.toISOString().split('T')[0];
 
+      // Create a unique numeric ID from the bsky string hash
+      let hash = 0;
+      for (let i = 0; i < bskyId.length; i++) {
+        hash = ((hash << 5) - hash) + bskyId.charCodeAt(i);
+        hash |= 0;
+      }
+
       items.push({
-        id: parseInt(tweetId.substring(tweetId.length - 10)) || Date.now() + Math.floor(Math.random() * 1000),
+        id: Math.abs(hash),
         title: cleanHtml(title).substring(0, 50) + (title.length > 50 ? '...' : ''),
         date: formattedDate,
-        category: 'X_FEED',
+        category: 'BSKY_FEED',
         excerpt: cleanContent.substring(0, 100) + (cleanContent.length > 100 ? '...' : ''),
-        content: `${cleanContent}\n\n[View on X](${link.replace(/nitter\.[a-z.]+/g, 'x.com').replace(/xcancel\.com/g, 'x.com')})\n<!-- tweet_id: ${tweetId} -->`,
-        icon: 'twitter'
+        content: `${cleanContent}\n\n[View on Bluesky](${link})\n<!-- bsky_id: ${bskyId} -->`,
+        icon: 'cloud' // Using 'cloud' as a placeholder for Bluesky butterfly
       });
     }
 
     if (items.length === 0) {
-      return response.status(200).json({ success: true, added: 0, message: 'No valid items found' });
+      return response.status(200).json({ success: true, added: 0, message: 'No posts found' });
     }
 
     const storageKey = 'pixel_blog';
     const existingPosts = await kv.get<Post[]>(`${storageKey}_posts`) || [];
     
-    const existingTweetIds = new Set(
+    const existingIds = new Set(
       existingPosts
-        .map(p => p.content.match(/<!-- tweet_id: (.*?) -->/)?.[1])
+        .map(p => p.content.match(/<!-- bsky_id: (.*?) -->/)?.[1])
         .filter(Boolean)
     );
 
     const uniqueNewItems = items.filter(t => {
-      const tid = t.content.match(/<!-- tweet_id: (.*?) -->/)?.[1];
-      return tid && !existingTweetIds.has(tid);
+      const bid = t.content.match(/<!-- bsky_id: (.*?) -->/)?.[1];
+      return bid && !existingIds.has(bid);
     });
 
     if (uniqueNewItems.length > 0) {
@@ -176,7 +116,7 @@ export default async function handler(
       return response.status(200).json({ success: true, added: uniqueNewItems.length, total: updatedPosts.length });
     }
 
-    return response.status(200).json({ success: true, added: 0, message: 'Up to date' });
+    return response.status(200).json({ success: true, added: 0, message: 'Already synced' });
   } catch (error) {
     console.error('Sync error:', error);
     return response.status(500).json({ error: 'Sync failed', details: error instanceof Error ? error.message : 'Unknown' });

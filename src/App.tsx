@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Terminal, Cpu, Zap, AlertTriangle, Gamepad2, Twitter } from 'lucide-react'
+import { Terminal, Cpu, Zap, AlertTriangle, Gamepad2, Twitter, Cloud, Languages } from 'lucide-react'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import treeBg from './assets/tree.webp'
 import type { Post, PixelBlogConfig } from './types'
@@ -291,6 +291,8 @@ export default function App({
       case 'terminal': return <Terminal size={24} />
       case 'gamepad': return <Gamepad2 size={24} />
       case 'twitter': return <Twitter size={24} />
+      case 'cloud': return <Cloud size={24} />
+      case 'butterfly': return <Languages size={24} />
       default: return <Terminal size={24} />
     }
   }

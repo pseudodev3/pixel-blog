@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Terminal, Gamepad2, ArrowLeft, AlertTriangle, Twitter, Cpu, Zap } from 'lucide-react'
+import { Terminal, Gamepad2, ArrowLeft, AlertTriangle, Twitter, Cpu, Zap, Cloud, Languages } from 'lucide-react'
 import type { Post } from '../types'
 import { audio } from '../utils/audio'
 
@@ -17,6 +17,8 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
       case 'terminal': return <Terminal size={14} />
       case 'gamepad': return <Gamepad2 size={14} />
       case 'twitter': return <Twitter size={14} />
+      case 'cloud': return <Cloud size={14} />
+      case 'butterfly': return <Languages size={14} />
       default: return <Terminal size={14} />
     }
   }
