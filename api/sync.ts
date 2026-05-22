@@ -2,19 +2,25 @@ import { kv } from '@vercel/kv';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const USERNAME = 'ghhosttdn42';
+
+// Tiered Priority: Direct Nitter (Best) -> RSSHub -> RSS-Bridge
 const NITTER_INSTANCES = [
-  'https://nitter.privacydev.net',
+  'https://nitter.at',
+  'https://nitter.poast.org',
   'https://nitter.lacontrevoie.fr',
-  'https://nitter.moomoo.me',
-  'https://nitter.mint.lgbt',
-  'https://xcancel.com'
+  'https://nitter.privacydev.net'
+];
+
+const RSSHUB_INSTANCES = [
+  'https://rsshub.app',
+  'https://rsshub.moe',
+  'https://rsshub.at'
 ];
 
 const RSS_BRIDGE_INSTANCES = [
   'https://wtf.roflcopter.fr/rss-bridge',
   'https://rss-bridge.org/bridge01',
-  'https://rss-bridge.lewd.tech',
-  'https://rb.vern.cc'
+  'https://rss-bridge.lewd.tech'
 ];
 
 interface Post {
@@ -28,6 +34,7 @@ interface Post {
 }
 
 function cleanHtml(html: string): string {
+  if (!html) return '';
   return html
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]*>/g, '')
@@ -47,68 +54,71 @@ async function fetchWithFallback(path: string) {
   const headers = { 
     'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
     'Accept': 'application/rss+xml, application/xml, text/xml',
-    'Accept-Language': 'en-US,en;q=0.9'
   };
 
-  // Try Nitter Direct first
+  const isValidRss = (text: string) => {
+    return (text.includes('<rss') || text.includes('<feed')) && 
+           !text.includes('whitelist') && 
+           !text.includes('HttpException') && 
+           !text.includes('Page Not Found');
+  };
+
+  // 1. Try Nitter Direct
   for (const instance of NITTER_INSTANCES) {
     try {
       const response = await fetch(`${instance}/${path}`, { headers });
       if (response.ok) {
         const text = await response.text();
-        if ((text.includes('<rss') || text.includes('<feed')) && !text.includes('whitelist')) {
-          return text;
-        }
+        if (isValidRss(text)) return text;
       }
     } catch (e) { console.warn(`Nitter ${instance} failed`); }
   }
 
-  // Fallback to RSS-Bridge
-  for (const instance of RSS_BRIDGE_INSTANCES) {
+  // 2. Try RSSHub (specifically for Twitter)
+  for (const instance of RSSHUB_INSTANCES) {
     try {
-      const bridgeUrl = `${instance}/?action=display&bridge=TwitterBridge&context=By+username&user=${USERNAME}&format=Atom`;
-      const response = await fetch(bridgeUrl, { headers });
+      const rsshubUrl = `${instance}/twitter/user/${USERNAME}`;
+      const response = await fetch(rsshubUrl, { headers });
       if (response.ok) {
         const text = await response.text();
-        if (text.includes('<rss') || text.includes('<feed')) return text;
+        if (isValidRss(text)) return text;
       }
-      
-      // Try NitterBridge via RSS-Bridge as well
+    } catch (e) { console.warn(`RSSHub ${instance} failed`); }
+  }
+
+  // 3. Try RSS-Bridge
+  for (const instance of RSS_BRIDGE_INSTANCES) {
+    try {
+      // Prefer NitterBridge via RSS-Bridge as it's often more stable than the direct TwitterBridge
       const nitterBridgeUrl = `${instance}/?action=display&bridge=NitterBridge&username=${USERNAME}&format=Atom`;
-      const nitterRes = await fetch(nitterBridgeUrl, { headers });
-      if (nitterRes.ok) {
-        const text = await nitterRes.text();
-        if (text.includes('<rss') || text.includes('<feed')) return text;
+      const response = await fetch(nitterBridgeUrl, { headers });
+      if (response.ok) {
+        const text = await response.text();
+        if (isValidRss(text)) return text;
       }
     } catch (e) { console.warn(`RSS-Bridge ${instance} failed`); }
   }
 
-  throw new Error('All sync vectors (Nitter & RSS-Bridge) failed');
+  throw new Error('All sync vectors failed to return valid RSS data');
 }
 
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
-  // Allow Vercel Cron or manual trigger with secret
   const authHeader = request.headers.authorization;
   const syncSecret = request.query.secret;
   
   const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
   const isManual = syncSecret === process.env.SYNC_SECRET && process.env.SYNC_SECRET !== undefined;
 
-  // In development, allow bypass
   if (!isCron && !isManual && process.env.NODE_ENV === 'production') {
     return response.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
     const rssText = await fetchWithFallback(`${USERNAME}/with_replies/rss`);
-    
-    // Improved Regex Parsing for both RSS and Atom
     const items: Post[] = [];
-    
-    // Try RSS <item> first
     const itemMatches = rssText.matchAll(/<(item|entry)>([\s\S]*?)<\/(item|entry)>/g);
 
     for (const match of itemMatches) {
@@ -118,7 +128,9 @@ export default async function handler(
       const pubDate = itemContent.match(/<(pubDate|updated)>(.*?)<\/(pubDate|updated)>/)?.[2] || '';
       const description = itemContent.match(/<(description|content|summary)[\s\S]*?>([\s\S]*?)<\/(description|content|summary)>/)?.[2] || '';
 
-      const tweetId = link.split('/').pop() || Math.random().toString(36).substring(7);
+      if (!link || link.length < 10) continue; // Skip invalid entries
+
+      const tweetId = link.split('/').pop()?.split('?')[0] || Math.random().toString(36).substring(7);
       const cleanContent = cleanHtml(description.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'));
       
       const dateObj = new Date(pubDate);
@@ -138,14 +150,12 @@ export default async function handler(
     }
 
     if (items.length === 0) {
-      return response.status(200).json({ success: true, added: 0, message: 'No items found in feed' });
+      return response.status(200).json({ success: true, added: 0, message: 'No valid items found' });
     }
 
-    // Get existing posts
     const storageKey = 'pixel_blog';
     const existingPosts = await kv.get<Post[]>(`${storageKey}_posts`) || [];
     
-    // Merge and deduplicate
     const existingTweetIds = new Set(
       existingPosts
         .map(p => p.content.match(/<!-- tweet_id: (.*?) -->/)?.[1])
@@ -163,16 +173,12 @@ export default async function handler(
         .slice(0, 100); 
 
       await kv.set(`${storageKey}_posts`, updatedPosts);
-      return response.status(200).json({ 
-        success: true, 
-        added: uniqueNewItems.length,
-        total: updatedPosts.length 
-      });
+      return response.status(200).json({ success: true, added: uniqueNewItems.length, total: updatedPosts.length });
     }
 
-    return response.status(200).json({ success: true, added: 0, message: 'All items already synced' });
+    return response.status(200).json({ success: true, added: 0, message: 'Up to date' });
   } catch (error) {
     console.error('Sync error:', error);
-    return response.status(500).json({ error: 'Failed to sync tweets', details: error instanceof Error ? error.message : 'Unknown error' });
+    return response.status(500).json({ error: 'Sync failed', details: error instanceof Error ? error.message : 'Unknown' });
   }
 }
