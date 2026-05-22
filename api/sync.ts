@@ -3,10 +3,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const USERNAME = 'ghhosttdn42';
 const NITTER_INSTANCES = [
-  'https://nitter.net',
-  'https://xcancel.com',
+  'https://nitter.privacydev.net',
+  'https://nitter.lacontrevoie.fr',
   'https://nitter.poast.org',
-  'https://nitter.privacydev.net'
+  'https://nitter.moomoo.me',
+  'https://nitter.mint.lgbt',
+  'https://xcancel.com'
 ];
 
 interface Post {
@@ -31,17 +33,39 @@ function cleanHtml(html: string): string {
 }
 
 async function fetchWithFallback(path: string) {
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+  ];
+
   for (const instance of NITTER_INSTANCES) {
     try {
       const response = await fetch(`${instance}/${path}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
+        headers: { 
+          'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
+          'Accept': 'application/rss+xml, application/xml, text/xml',
+          'Accept-Language': 'en-US,en;q=0.9'
+        }
       });
-      if (response.ok) return await response.text();
+      
+      if (response.ok) {
+        const text = await response.text();
+        // Check if the response is actually a whitelist message instead of RSS
+        if (text.includes('whitelist') || text.includes('Plain request with just the ID')) {
+          console.warn(`Instance ${instance} returned whitelist message, skipping...`);
+          continue;
+        }
+        if (text.includes('<rss') || text.includes('<feed')) {
+          return text;
+        }
+      }
+      console.warn(`Instance ${instance} failed with status: ${response.status}`);
     } catch (e) {
       console.error(`Failed to fetch from ${instance}:`, e);
     }
   }
-  throw new Error('All Nitter instances failed');
+  throw new Error('All Nitter instances failed or returned invalid data');
 }
 
 export default async function handler(
