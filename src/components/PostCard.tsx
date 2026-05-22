@@ -5,7 +5,7 @@ import type { Post } from '../types'
 import { audio } from '../utils/audio'
 
 interface PostCardProps {
-  post: Post
+  post: Post & { renderedIcon?: React.ReactNode }
   onRead: (post: Post) => void
 }
 
@@ -31,9 +31,14 @@ export const PostCard = ({ post, onRead }: PostCardProps) => (
     
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-        <span style={{ color: 'var(--color-accent)', fontSize: '0.6rem', border: '2px solid var(--color-accent)', padding: '2px 6px' }}>
-          {post.category}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <span style={{ color: 'var(--color-primary)', display: 'flex' }}>
+            {post.renderedIcon}
+          </span>
+          <span style={{ color: 'var(--color-accent)', fontSize: '0.6rem', border: '2px solid var(--color-accent)', padding: '2px 6px' }}>
+            {post.category}
+          </span>
+        </div>
         <span style={{ color: 'var(--color-secondary)', fontSize: '0.5rem', opacity: 0.8 }}>
           TIMESTAMP: {post.date.replace(/-/g, '.')}
         </span>

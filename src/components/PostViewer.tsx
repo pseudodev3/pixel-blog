@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Terminal, Gamepad2, ArrowLeft, AlertTriangle } from 'lucide-react'
+import { Terminal, Gamepad2, ArrowLeft, AlertTriangle, Twitter, Cpu, Zap } from 'lucide-react'
 import type { Post } from '../types'
 import { audio } from '../utils/audio'
 
@@ -10,6 +10,17 @@ interface PostViewerProps {
 }
 
 export const PostViewer = ({ post, onClose }: PostViewerProps) => {
+  const getIcon = (name?: string) => {
+    switch (name) {
+      case 'cpu': return <Cpu size={14} />
+      case 'zap': return <Zap size={14} />
+      case 'terminal': return <Terminal size={14} />
+      case 'gamepad': return <Gamepad2 size={14} />
+      case 'twitter': return <Twitter size={14} />
+      default: return <Terminal size={14} />
+    }
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -39,7 +50,7 @@ export const PostViewer = ({ post, onClose }: PostViewerProps) => {
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', fontSize: '0.6rem', color: 'var(--color-secondary)', opacity: 0.7, borderTop: '2px solid #111', paddingTop: '1.5rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              <Terminal size={14} /> DATE: {post.date.replace(/-/g, '.')}
+              {getIcon(post.icon)} DATE: {post.date.replace(/-/g, '.')}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <Gamepad2 size={14} /> NODE: {post.category}

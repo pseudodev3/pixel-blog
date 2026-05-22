@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, X, Trash2, Edit3, Plus, Download, Upload, Cpu, Zap, Terminal, Gamepad2, ChevronLeft, Save } from 'lucide-react'
+import { Lock, X, Trash2, Edit3, Plus, Download, Upload, Cpu, Zap, Terminal, Gamepad2, ChevronLeft, Save, Twitter } from 'lucide-react'
 import type { Post } from '../types'
 import { audio } from '../utils/audio'
 
@@ -19,7 +19,8 @@ const ICONS = [
   { id: 'terminal', component: Terminal },
   { id: 'cpu', component: Cpu },
   { id: 'zap', component: Zap },
-  { id: 'gamepad', component: Gamepad2 }
+  { id: 'gamepad', component: Gamepad2 },
+  { id: 'twitter', component: Twitter }
 ]
 
 export const AdminTerminal = ({ posts, onClose, onSave, onDelete, onImport, adminPassword }: AdminTerminalProps) => {

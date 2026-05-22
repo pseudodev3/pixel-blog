@@ -7,7 +7,7 @@ export interface Post {
   category: string
   excerpt: string
   content: string
-  icon?: string // Store as icon name (e.g., 'terminal', 'cpu')
+  icon?: string // Store as icon name (e.g., 'terminal', 'cpu', 'twitter')
 }
 
 export interface PixelBlogConfig {
