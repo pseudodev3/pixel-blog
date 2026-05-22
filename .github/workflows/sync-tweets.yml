@@ -10,12 +10,26 @@ jobs:
     steps:
       - name: Trigger Vercel Sync Endpoint
         run: |
-          # Use VERCEL_URL if provided, otherwise you can hardcode your site URL here
-          URL="${{ secrets.VERCEL_PROJECT_URL }}"
+          # Clean the URL (remove https:// if user added it)
+          URL=$(echo "${{ secrets.VERCEL_PROJECT_URL }}" | sed -e 's|^https://||' -e 's|/$||')
+          
           if [ -z "$URL" ]; then
-            echo "Error: VERCEL_PROJECT_URL secret is not set."
+            echo "::error::VERCEL_PROJECT_URL secret is empty!"
             exit 1
           fi
           
-          curl -s -X GET "https://$URL/api/sync" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          echo "Connecting to node: $URL"
+          
+          RESPONSE=$(curl -s -w "%{http_code}" -o response.txt -X GET "https://$URL/api/sync" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          
+          echo "HTTP_STATUS: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "SUCCESS: Sync completed."
+            cat response.txt
+          else
+            echo "::error::Sync failed with status $RESPONSE"
+            cat response.txt
+            exit 1
+          fi
